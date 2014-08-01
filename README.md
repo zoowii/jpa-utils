@@ -3,6 +3,8 @@ HibernateUtils
 
 ActiveRecord-like implementation based on Hibernate/JPA
 
+2014七夕献礼,庆祝自己向证明注孤生迈出了更加坚实的一步
+
 ## Author
 
 * zoowii(https://github.com/zoowii)
