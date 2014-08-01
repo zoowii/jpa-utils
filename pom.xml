@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.zoowii</groupId>
-    <artifactId>hibernate-utils</artifactId>
+    <artifactId>jpa-utils</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
     <repositories>

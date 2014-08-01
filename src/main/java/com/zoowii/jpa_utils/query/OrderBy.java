@@ -1,4 +1,4 @@
-package com.zoowii.hibernate_utils.query;
+package com.zoowii.jpa_utils.query;
 
 public class OrderBy {
     private String sort = null;

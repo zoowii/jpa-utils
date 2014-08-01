@@ -1,9 +1,9 @@
-package com.zoowii.hibernate_utils.query;
+package com.zoowii.jpa_utils.query;
 
 import com.google.common.base.Function;
-import com.zoowii.hibernate_utils.orm.Model;
-import com.zoowii.hibernate_utils.util.ListUtil;
-import com.zoowii.hibernate_utils.util.StringUtil;
+import com.zoowii.jpa_utils.orm.Model;
+import com.zoowii.jpa_utils.util.ListUtil;
+import com.zoowii.jpa_utils.util.StringUtil;
 
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;

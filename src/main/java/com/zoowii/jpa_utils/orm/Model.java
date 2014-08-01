@@ -1,11 +1,9 @@
-package com.zoowii.hibernate_utils.orm;
+package com.zoowii.jpa_utils.orm;
 
 
-import com.alibaba.fastjson.annotation.JSONField;
-import com.zoowii.hibernate_utils.core.Session;
+import com.zoowii.jpa_utils.core.Session;
 
 import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
 
 @MappedSuperclass
 public class Model {

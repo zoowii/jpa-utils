@@ -1,7 +1,7 @@
-HibernateUtils
+JPAUtils
 =====
 
-ActiveRecord-like implementation based on Hibernate/JPA
+ActiveRecord-like implementation based on JPA(eg. Hibernate)
 
 2014七夕献礼,庆祝自己向证明注孤生迈出了更加坚实的一步
 

@@ -1,9 +1,9 @@
-package com.zoowii.hibernate_utils.test;
+package com.zoowii.jpa_utils.test;
 
-import com.zoowii.hibernate_utils.core.Session;
-import com.zoowii.hibernate_utils.demo.models.Employee;
-import com.zoowii.hibernate_utils.query.Query;
-import com.zoowii.hibernate_utils.util.StringUtil;
+import com.zoowii.jpa_utils.core.Session;
+import com.zoowii.jpa_utils.demo.models.Employee;
+import com.zoowii.jpa_utils.query.Query;
+import com.zoowii.jpa_utils.util.StringUtil;
 import junit.framework.TestCase;
 
 import java.util.List;

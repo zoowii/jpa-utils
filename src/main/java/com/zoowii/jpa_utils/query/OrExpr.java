@@ -1,6 +1,6 @@
-package com.zoowii.hibernate_utils.query;
+package com.zoowii.jpa_utils.query;
 
-import com.zoowii.hibernate_utils.util.ListUtil;
+import com.zoowii.jpa_utils.util.ListUtil;
 
 import java.util.List;
 import java.util.Map;

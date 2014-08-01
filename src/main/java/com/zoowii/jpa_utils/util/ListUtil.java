@@ -1,4 +1,4 @@
-package com.zoowii.hibernate_utils.util;
+package com.zoowii.jpa_utils.util;
 
 import com.google.common.base.Function;
 

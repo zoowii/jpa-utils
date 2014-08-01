@@ -1,7 +1,7 @@
-package com.zoowii.hibernate_utils.demo.models;
+package com.zoowii.jpa_utils.demo.models;
 
-import com.zoowii.hibernate_utils.orm.Model;
-import com.zoowii.hibernate_utils.query.Finder;
+import com.zoowii.jpa_utils.orm.Model;
+import com.zoowii.jpa_utils.query.Finder;
 
 import javax.persistence.*;
 
