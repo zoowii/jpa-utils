@@ -14,21 +14,21 @@ public class DaoTest extends TestCase {
     private static final Logger logger = Logger.getLogger("DaoTest");
 
     public void testCreate() {
-        Session session = Session.currentSession();
-        session.begin();
-        try {
-            for (int i = 0; i < 10; ++i) {
-                Employee employee = new Employee();
-                employee.setName("employee_" + StringUtil.randomString(10));
-                employee.setAge(new Random().nextInt(100));
-                employee.save();
-                logger.info("new employee " + employee.getId());
+            Session session = Session.currentSession();
+            session.begin();
+            try {
+                for (int i = 0; i < 10; ++i) {
+                    Employee employee = new Employee();
+                    employee.setName("employee_" + StringUtil.randomString(10));
+                    employee.setAge(new Random().nextInt(100));
+                    employee.save();
+                    logger.info("new employee " + employee.getId());
+                }
+                session.commit();
+            } catch (Exception e) {
+                e.printStackTrace();
+                session.rollback();
             }
-            session.commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            session.rollback();
-        }
     }
 
     public void testQuery() {

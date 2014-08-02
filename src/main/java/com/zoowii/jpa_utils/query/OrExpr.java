@@ -20,9 +20,9 @@ public class OrExpr extends Expr {
         Map<String, Object> leftQuery = left.toQueryString(query);
         Map<String, Object> rightQuery = right.toQueryString(query);
         String queryStr = "(" + leftQuery.get("query") + " " + op + " " + rightQuery.get("query") + ")";
-        List<Object> bindings = ListUtil.seq();
-        bindings.addAll((List<Object>) leftQuery.get("bindings"));
-        bindings.addAll((List<Object>) rightQuery.get("bindings"));
+        ParameterBindings bindings = new ParameterBindings();
+        bindings = bindings.addAll((ParameterBindings) leftQuery.get("bindings"));
+        bindings = bindings.addAll((ParameterBindings) rightQuery.get("bindings"));
         return ListUtil.hashmap("query", queryStr, "bindings", bindings);
     }
 }

@@ -6,12 +6,14 @@ import java.util.List;
 public class Session {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("persistenceUnit");
     protected EntityManager em = null;
-    private static final ThreadLocal<Session> sessionThreadLocal = new ThreadLocal<Session>();
+    private static final ThreadLocal<Session> sessionThreadLocal = new ThreadLocal<Session>() {
+        @Override
+        public Session initialValue() {
+            return new Session();
+        }
+    };
 
     public static Session currentSession() {
-        if (sessionThreadLocal.get() == null) {
-            sessionThreadLocal.set(new Session());
-        }
         return sessionThreadLocal.get();
     }
 

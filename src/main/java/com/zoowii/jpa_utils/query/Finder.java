@@ -10,11 +10,11 @@ import java.util.List;
  * @param <M> model class
  * @param <K> modek primary key class
  */
-public class Finder<M extends Model, K> {
+public class Finder<K, M extends Model> {
     protected Class modelCls;
     protected Class keyCls;
 
-    public Finder(Class mCls, Class kCls) {
+    public Finder(Class kCls, Class mCls) {
         modelCls = mCls;
         keyCls = kCls;
     }

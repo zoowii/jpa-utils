@@ -7,6 +7,7 @@ import com.zoowii.jpa_utils.util.StringUtil;
 
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,8 @@ public class Query<M extends Model> {
     protected String _tableSymbol = null;
     protected int _limit = -1;
     protected int _offset = -1;
+    protected Map<Integer, Object> indexParameters = new HashMap<Integer, Object>();
+    protected Map<String, Object> mapParameters = new HashMap<String, Object>();
 
     public String getTableSymbol() {
         if (_tableSymbol == null) {
@@ -43,6 +46,10 @@ public class Query<M extends Model> {
         return this;
     }
 
+    public Query<M> setMaxRows(int limit) {
+        return limit(limit);
+    }
+
     public Query<M> offset(int offset) {
         this._offset = offset;
         return this;
@@ -59,8 +66,20 @@ public class Query<M extends Model> {
         query._offset = this._offset;
         query._tableSymbol = this._tableSymbol;
         query.condition = this.condition;
-        query.orderBys = this.orderBys;
+        query.orderBys = this.orderBys; // clone it
+        query.indexParameters = this.indexParameters; // clone it
+        query.mapParameters = this.mapParameters; // clone it
         return query;
+    }
+
+    public Query<M> setParameter(String key, Object value) {
+        this.mapParameters.put(key, value);
+        return this;
+    }
+
+    public Query<M> setParameter(int index, Object value) {
+        this.indexParameters.put(index, value);
+        return this;
     }
 
     public Query<M> eq(String name, Object value) {
@@ -80,6 +99,11 @@ public class Query<M extends Model> {
 
     public Query<M> ge(String name, Object value) {
         this.condition = this.condition.ge(name, value);
+        return this;
+    }
+
+    public Query<M> like(String name, Object value) {
+        this.condition = this.condition.like(name, value);
         return this;
     }
 
@@ -135,9 +159,9 @@ public class Query<M extends Model> {
         if (this.orderBys.size() > 0) {
             queryStr += " order by " + this.getOrderByString();
         }
-        List<Object> bindings = ListUtil.seq();
+        ParameterBindings bindings = new ParameterBindings();
         if (exprQuery != null) {
-            bindings = (List<Object>) exprQuery.get("bindings");
+            bindings = (ParameterBindings) exprQuery.get("bindings");
         }
         Map<String, Object> extras = ListUtil.hashmap("dummy", "dummy");
         if (this._limit >= 0) {
@@ -187,10 +211,13 @@ public class Query<M extends Model> {
             queryString = queryWrapper.apply(queryString);
         }
         TypedQuery typedQuery = M.getSession().getEntityManager().createQuery(queryString, model);
-        List<Object> bindings = (List<Object>) query.get("bindings");
+        ParameterBindings bindings = (ParameterBindings) query.get("bindings");
         if (bindings != null) {
-            for (int i = 0; i < bindings.size(); ++i) {
-                typedQuery.setParameter(i + 1, bindings.get(i));
+            for (int i = 0; i < bindings.getIndexBindings().size(); ++i) {
+                typedQuery.setParameter(i + 1, bindings.getIndexBindings().get(i));
+            }
+            for (String key : bindings.getMapBindings().keySet()) {
+                typedQuery.setParameter(key, bindings.getMapBindings().get(key));
             }
         }
         Map<String, Object> extras = (Map<String, Object>) query.get("extras");
@@ -205,6 +232,10 @@ public class Query<M extends Model> {
         return typedQuery;
     }
 
+    public List<M> findList() {
+        return all();
+    }
+
     public List<M> all(Class model) {
         return getTypedQuery(model).getResultList();
     }
@@ -216,8 +247,11 @@ public class Query<M extends Model> {
         return first(this.cls);
     }
 
+    public M findUnique() {
+        return first();
+    }
+
     public M first(Class model) {
         return (M) getTypedQuery(model).setMaxResults(1).getSingleResult();
     }
-
 }

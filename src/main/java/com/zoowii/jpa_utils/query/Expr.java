@@ -15,6 +15,7 @@ public class Expr {
     public static final String GE = ">=";
     public static final String OR = "or";
     public static final String AND = "and";
+    public static final String LIKE = "like";
     protected String op = null;
     protected List<Object> items = new ArrayList<Object>();
 
@@ -30,7 +31,7 @@ public class Expr {
         @Override
         public Map<String, Object> toQueryString(Query query) {
             return ListUtil.hashmap("query",
-                    "1=1", "bindings", ListUtil.seq());
+                    "1=1", "bindings", new ParameterBindings());
         }
     }
 
@@ -82,6 +83,14 @@ public class Expr {
         return new Expr(GE, ListUtil.seq(name, value));
     }
 
+    public Expr like(String name, Object value) {
+        return createLIKE(name, value);
+    }
+
+    public static Expr createLIKE(String name, Object value) {
+        return new Expr(LIKE, ListUtil.seq(name, value));
+    }
+
     public Expr ge(String name, Object value) {
         return createAND(this, createGE(name, value));
     }
@@ -107,7 +116,9 @@ public class Expr {
      */
     public Map<String, Object> toQueryString(Query query) {
         String queryStr = items.get(0) + " " + op + " ?";
-        List<Object> bindings = ListUtil.seq((Object) items.get(1));
+//        List<Object> bindings = ListUtil.seq((Object) items.get(1));
+        ParameterBindings bindings = new ParameterBindings();
+        bindings.addIndexBinding(items.get(1));
         return ListUtil.hashmap("query", queryStr, "bindings", bindings);
     }
 }

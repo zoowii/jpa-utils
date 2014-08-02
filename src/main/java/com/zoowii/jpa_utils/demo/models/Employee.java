@@ -41,5 +41,5 @@ public class Employee extends Model {
         this.id = id;
     }
 
-    public static Finder<Employee, Integer> find = new Finder<Employee, Integer>(Employee.class, Integer.class);
+    public static Finder<Integer, Employee> find = new Finder<Integer, Employee>(Integer.class, Employee.class);
 }
