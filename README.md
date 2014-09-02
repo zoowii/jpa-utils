@@ -11,6 +11,14 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate)
 
 ## Usages
 
+    // maven
+    deploy it to you local maven nexus, then.
+    <dependency>
+         <groupId>com.zoowii</groupId>
+         <artifactId>jpa-utils</artifactId>
+         <version>1.1</version>
+    </dependency>
+
     // create
     Session session = Session.currentSession();
     session.begin();

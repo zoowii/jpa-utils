@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.zoowii</groupId>
   <artifactId>jpa-utils</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
   <build>
     <plugins>
       <plugin>
@@ -73,5 +73,17 @@
       <scope>compile</scope>
     </dependency>
   </dependencies>
+  <distributionManagement>
+    <repository>
+      <id>releases</id>
+      <name>Internal Releases</name>
+      <url>http://maven.local:81/nexus/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>Snapshots</id>
+      <name>Internal Snapshots</name>
+      <url>http://maven.local:81/nexus/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
 </project>
 

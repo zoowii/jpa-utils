@@ -122,6 +122,11 @@ public class Query<M extends Model> {
         return this;
     }
 
+    public Query<M> and(Expr expr) {
+        this.condition = this.condition.and(expr);
+        return this;
+    }
+
     public Query<M> orderBy(String sort) {
         return orderBy(sort, true);
     }
@@ -226,7 +231,7 @@ public class Query<M extends Model> {
                 typedQuery.setMaxResults((Integer) extras.get("max"));
             }
             if (extras.containsKey("offset")) {
-                typedQuery.setMaxResults((Integer) extras.get("offset"));
+                typedQuery.setFirstResult((Integer) extras.get("offset"));
             }
         }
         return typedQuery;
