@@ -12,8 +12,18 @@ public class Model {
         return Session.currentSession();
     }
 
+    public void beforeSave() {
+
+    }
+
+    public void afterSave() {
+
+    }
+
     public void save() {
+        beforeSave();
         getSession().save(this);
+        afterSave();
     }
 
     public void update() {
