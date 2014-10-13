@@ -186,12 +186,18 @@ public class Query<M extends Model> {
     }
 
     public long count(Class model) {
-        return (Long) getTypedQuery(Long.class, new Function<String, String>() {
+        // 不能直接getSingleResult,因为在分布式mysql集群中,count语句可能返回多个值
+        List result = getTypedQuery(Long.class, new Function<String, String>() {
             @Override
             public String apply(String s) {
                 return "select count(*) " + s;
             }
-        }).getSingleResult();
+        }).getResultList();
+        Object countResult = ListUtil.first(result);
+        if (countResult == null) {
+            throw new RuntimeException("no result of count sql");
+        }
+        return (Long) countResult;
     }
 
     public List<M> all() {

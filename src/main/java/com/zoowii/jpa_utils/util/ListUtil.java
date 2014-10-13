@@ -39,4 +39,11 @@ public class ListUtil {
         }
         return result;
     }
+
+    public static <T> T first(List<T> source) {
+        if (source == null) {
+            return null;
+        }
+        return source.get(0);
+    }
 }
