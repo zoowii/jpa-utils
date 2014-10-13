@@ -4,12 +4,14 @@ import com.google.common.base.Function;
 import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.StringUtil;
+import com.zoowii.jpa_utils.util.functions.Function2;
 
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Query<M extends Model> {
     protected String tableName = null;  // TODO: select from multi-tables
@@ -193,11 +195,18 @@ public class Query<M extends Model> {
                 return "select count(*) " + s;
             }
         }).getResultList();
-        Object countResult = ListUtil.first(result);
-        if (countResult == null) {
-            throw new RuntimeException("no result of count sql");
-        }
-        return (Long) countResult;
+        return (Long) ListUtil.reduce(result, 0L, new Function2() {
+            @Override
+            public Object apply(Object o1, Object o2) {
+                if (o1 == null && o2 == null) {
+                    return 0L;
+                }
+                if (o1 == null) {
+                    return o2;
+                }
+                return (Long) o1 + (Long) o2;
+            }
+        });
     }
 
     public List<M> all() {

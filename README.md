@@ -12,11 +12,11 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate)
 ## Usages
 
     // maven
-    deploy it to you local maven nexus, then.
+    !!! deploy it to you local maven nexus, then.
     <dependency>
          <groupId>com.zoowii</groupId>
          <artifactId>jpa-utils</artifactId>
-         <version>1.3</version>
+         <version>1.4</version>
     </dependency>
 
     // create
