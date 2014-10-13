@@ -23,6 +23,14 @@ public class ListUtil {
         return result;
     }
 
+    public static <T> List<T> seq(T... items) {
+        List<T> result = new ArrayList<T>();
+        for (T item : items) {
+            result.add(item);
+        }
+        return result;
+    }
+
     public static List<Integer> intToList(int[] arr) {
         List<Integer> list = new ArrayList<Integer>();
         for (int i = 0; i < arr.length; i++) {
