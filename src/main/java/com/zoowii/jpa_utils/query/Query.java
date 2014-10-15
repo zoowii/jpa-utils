@@ -272,6 +272,10 @@ public class Query<M extends Model> {
     }
 
     public M first(Class model) {
+        return (M) ListUtil.first(getTypedQuery(model).setMaxResults(1).getResultList());
+    }
+
+    public M single(Class model) {
         return (M) getTypedQuery(model).setMaxResults(1).getSingleResult();
     }
 }
