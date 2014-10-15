@@ -59,11 +59,11 @@ public class Session {
     }
 
     public void rollback() {
-        try {
-            getTransaction().rollback();
-        } finally {
-            txStack.poll();
+        txStack.poll();
+        if (getTransactionNestedLevel() > 0) {
+            return;
         }
+        getTransaction().rollback();
     }
 
     /**
