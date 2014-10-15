@@ -6,7 +6,7 @@
 
     <groupId>com.zoowii</groupId>
     <artifactId>jpa-utils</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
     <packaging>jar</packaging>
     <repositories>
         <repository>
@@ -18,12 +18,12 @@
         <repository>
             <id>releases</id>
             <name>Internal Releases</name>
-            <url>http://maven.local:81/nexus/content/repositories/releases</url>
+            <url>http://maven.local:8081/nexus/content/repositories/releases</url>
         </repository>
         <snapshotRepository>
             <id>Snapshots</id>
             <name>Internal Snapshots</name>
-            <url>http://maven.local:81/nexus/content/repositories/snapshots</url>
+            <url>http://maven.local:8081/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 

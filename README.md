@@ -16,7 +16,7 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate)
     <dependency>
          <groupId>com.zoowii</groupId>
          <artifactId>jpa-utils</artifactId>
-         <version>1.5</version>
+         <version>1.6</version>
     </dependency>
 
     // create
