@@ -2,10 +2,17 @@ package com.zoowii.jpa_utils.core;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Session {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("persistenceUnit");
     protected EntityManager em = null;
+    /**
+     * 用来解决事务嵌套
+     */
+    protected final Queue<Object> txStack = new ConcurrentLinkedQueue<Object>();
     private static final ThreadLocal<Session> sessionThreadLocal = new ThreadLocal<Session>() {
         @Override
         public Session initialValue() {
@@ -32,15 +39,40 @@ public class Session {
     }
 
     public void begin() {
+        txStack.add(1);
+        if (getTransactionNestedLevel() > 1) {
+            return;
+        }
         getTransaction().begin();
     }
 
     public void commit() {
+        txStack.poll();
+        if (getTransactionNestedLevel() > 0) {
+            return;
+        }
         getTransaction().commit();
     }
 
+    public boolean isOpen() {
+        return getEntityManager().isOpen();
+    }
+
     public void rollback() {
-        getTransaction().rollback();
+        try {
+            getTransaction().rollback();
+        } finally {
+            txStack.poll();
+        }
+    }
+
+    /**
+     * 获取事务嵌套层数
+     *
+     * @return
+     */
+    public int getTransactionNestedLevel() {
+        return txStack.size();
     }
 
     public boolean isTransactionActive() {
