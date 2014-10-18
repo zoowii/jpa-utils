@@ -6,13 +6,9 @@
 
     <groupId>com.zoowii</groupId>
     <artifactId>jpa-utils</artifactId>
-    <version>1.9</version>
+    <version>1.9.7</version>
     <packaging>jar</packaging>
     <repositories>
-        <repository>
-            <id>clojars.org</id>
-            <url>http://clojars.org/repo/</url>
-        </repository>
     </repositories>
     <distributionManagement>
         <repository>
@@ -120,11 +116,6 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.3-1101-jdbc41</version>
-        </dependency>
-        <dependency>
-            <groupId>org.clojure</groupId>
-            <artifactId>clojure</artifactId>
-            <version>1.6.0</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>

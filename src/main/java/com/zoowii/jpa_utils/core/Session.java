@@ -1,35 +1,48 @@
 package com.zoowii.jpa_utils.core;
 
+import com.zoowii.jpa_utils.orm.Model;
+import com.zoowii.jpa_utils.util.ListUtil;
+
 import javax.persistence.*;
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Session {
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("persistenceUnit");
+    private SessionFactory sessionFactory = null;
     protected EntityManager em = null;
     /**
      * 用来解决事务嵌套
      */
     protected final Queue<Object> txStack = new ConcurrentLinkedQueue<Object>();
-    private static final ThreadLocal<Session> sessionThreadLocal = new ThreadLocal<Session>() {
-        @Override
-        public Session initialValue() {
-            return new Session();
+
+    protected SessionFactory getSessionFactory() {
+        if (sessionFactory == null) {
+            sessionFactory = SessionFactory.getDefaultSessionFactory();
         }
-    };
+        return sessionFactory;
+    }
+
+    protected EntityManagerFactory getEntityManagerFactory() {
+        return getSessionFactory().getEntityManagerFactory();
+    }
 
     public static Session currentSession() {
-        return sessionThreadLocal.get();
+        return SessionFactory.getDefaultSessionFactory().currentSession();
     }
 
     private Session() {
     }
 
+    public Session(EntityManagerFactory emf) {
+        this.em = em;
+    }
+
     public EntityManager getEntityManager() {
         if (em == null) {
-            em = emf.createEntityManager();
+            em = getEntityManagerFactory().createEntityManager();
         }
         return em;
     }
@@ -64,6 +77,26 @@ public class Session {
             return;
         }
         getTransaction().rollback();
+    }
+
+    public boolean isClosed() {
+        return !isOpen();
+    }
+
+    /**
+     * 不需要手动自己调用,EntityManagerFactory的connection cleanup thread会自动清理
+     */
+    public void close() {
+        if (isOpen()) {
+            getEntityManager().close();
+        }
+    }
+
+    /**
+     * 关闭整个EntityManagerFactory不能再使用它来创建EntityManager了
+     */
+    public void shutdown() {
+        getSessionFactory().close();
     }
 
     /**
@@ -107,16 +140,31 @@ public class Session {
         getEntityManager().flush();
     }
 
+    public int executeNativeSql(String sql) {
+        return getEntityManager().createNativeQuery(sql).executeUpdate();
+    }
+
+    public int executeQuerySql(String sql) {
+        return getEntityManager().createQuery(sql).executeUpdate();
+    }
+
     public List findListByQuery(Class cls, String queryString) {
         EntityManager em = getEntityManager();
         TypedQuery query = em.createQuery(queryString, cls);
         return query.getResultList();
     }
 
-    public Object findOneByQuery(Class cls, String queryString) {
+    public Object findFirstByQuery(Class cls, String queryString) {
         EntityManager em = getEntityManager();
         TypedQuery query = em.createQuery(queryString, cls);
-        return query.getFirstResult();
+        query.setMaxResults(1);
+        return ListUtil.first(query.getResultList());
+    }
+
+    public Object findSingleBySql(Class cls, String sql) {
+        Query query = getEntityManager().createQuery(sql, cls);
+        query.setMaxResults(1);
+        return query.getSingleResult();
     }
 
     /**
@@ -128,9 +176,35 @@ public class Session {
         return query.getResultList();
     }
 
-    public Object findOneByRawQuery(Class cls, String queryString) {
+    public List findListByRawQuery(String queryString) {
+        EntityManager em = getEntityManager();
+        javax.persistence.Query query = em.createNativeQuery(queryString);
+        return query.getResultList();
+    }
+
+    public Object findFirstByRawQuery(Class cls, String queryString) {
         EntityManager em = getEntityManager();
         javax.persistence.Query query = em.createNativeQuery(queryString, cls);
-        return query.getFirstResult();
+        query.setMaxResults(1);
+        return ListUtil.first(query.getResultList());
+    }
+
+    public Object findFirstByRawQuery(String queryString) {
+        EntityManager em = getEntityManager();
+        javax.persistence.Query query = em.createNativeQuery(queryString);
+        query.setMaxResults(1);
+        return ListUtil.first(query.getResultList());
+    }
+
+    public Object findSingleByNativeSql(Class cls, String sql) {
+        Query query = getEntityManager().createNativeQuery(sql, cls);
+        query.setMaxResults(1);
+        return query.getSingleResult();
+    }
+
+    public Object findSingleByNativeSql(String sql) {
+        Query query = getEntityManager().createNativeQuery(sql);
+        query.setMaxResults(1);
+        return query.getSingleResult();
     }
 }
