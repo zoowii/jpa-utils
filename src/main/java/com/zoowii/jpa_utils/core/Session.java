@@ -60,6 +60,9 @@ public class Session {
     }
 
     public void commit() {
+        if (!isOpen()) {
+            begin();
+        }
         txStack.poll();
         if (getTransactionNestedLevel() > 0) {
             return;
@@ -72,6 +75,9 @@ public class Session {
     }
 
     public void rollback() {
+        if (!isTransactionActive()) {
+            return;
+        }
         txStack.poll();
         if (getTransactionNestedLevel() > 0) {
             return;

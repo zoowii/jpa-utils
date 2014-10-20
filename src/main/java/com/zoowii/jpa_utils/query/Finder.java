@@ -20,10 +20,16 @@ public class Finder<K, M extends Model> {
     }
 
     public M byId(K key) {
+        if (!M.getSession().isTransactionActive()) {
+            M.getSession().begin();
+        }
         return (M) M.getSession().find(modelCls, key);
     }
 
     public List<M> findAll() {
+        if (!M.getSession().isTransactionActive()) {
+            M.getSession().begin();
+        }
         return M.getSession().findListByQuery(modelCls, "from " + modelCls.getSimpleName());
     }
 
