@@ -112,9 +112,26 @@ public class Expr {
     }
 
     /**
+     * 判断这个表达式是否is null或者is not null表达式
+     *
+     * @return
+     */
+    private boolean isNullOrNotNullExpr() {
+        if (op.equals(EQ) || op.equals(NE)) {
+            return items.size() == 2 && items.get(1) == null;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * parse to Query string and bindings
      */
     public Map<String, Object> toQueryString(Query query) {
+        if (isNullOrNotNullExpr()) {
+            String queryStr = items.get(0) + " " + (op.equals(EQ) ? "is null" : "is not null");
+            return ListUtil.hashmap("query", queryStr, "bindings", new ParameterBindings());
+        }
         String queryStr = items.get(0) + " " + op + " ?";
 //        List<Object> bindings = ListUtil.seq((Object) items.get(1));
         ParameterBindings bindings = new ParameterBindings();
