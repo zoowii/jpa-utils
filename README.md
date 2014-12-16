@@ -53,3 +53,8 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate)
         e.printStackTrace();
         session.rollback();
     }
+
+
+## TODO
+
+* 给Finder操作加上可选的session

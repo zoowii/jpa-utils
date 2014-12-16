@@ -4,7 +4,7 @@
              version="2.0" xmlns="http://java.sun.com/xml/ns/persistence">
     <persistence-unit name="persistenceUnit"
                       transaction-type="RESOURCE_LOCAL">
-        <!--<class>com.zoowii.jpa_utils.test.demo.models.Employee</class>-->
+        <class>com.zoowii.jpa_utils.test.models.Employee</class>
         <properties>
             <!--<property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>-->
             <!--<property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/test"/>-->
@@ -20,6 +20,18 @@
             <property name="hbm2ddl.auto" value="update"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+        </properties>
+    </persistence-unit>
+    <persistence-unit name="mysql" transaction-type="RESOURCE_LOCAL">
+        <class>com.zoowii.jpa_utils.test.models.Employee</class>
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://maven.local:3306/test"/>
+            <property name="javax.persistence.jdbc.user" value="test"/>
+            <property name="javax.persistence.jdbc.password" value="test"/>
+            <property name="hbm2ddl.auto" value="update"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
         </properties>
     </persistence-unit>
 </persistence>

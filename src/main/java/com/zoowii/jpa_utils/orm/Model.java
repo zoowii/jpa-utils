@@ -21,8 +21,12 @@ public class Model {
     }
 
     public void save() {
+        save(getSession());
+    }
+
+    public void save(Session session) {
         beforeSave();
-        getSession().save(this);
+        session.save(this);
         afterSave();
     }
 
@@ -35,8 +39,12 @@ public class Model {
     }
 
     public void update() {
+        update(getSession());
+    }
+
+    public void update(Session session) {
         beforeUpdate();
-        getSession().update(this);
+        session.update(this);
         afterUpdate();
     }
 
@@ -49,8 +57,12 @@ public class Model {
     }
 
     public void delete() {
+        delete(getSession());
+    }
+
+    public void delete(Session session) {
         beforeDelete();
-        getSession().delete(this);
+        session.delete(this);
         afterDelete();
     }
 
@@ -63,8 +75,12 @@ public class Model {
     }
 
     public void refresh() {
+        refresh(getSession());
+    }
+
+    public void refresh(Session session) {
         beforeRefresh();
-        getSession().refresh(this);
+        session.refresh(this);
         afterRefresh();
     }
 
@@ -77,8 +93,12 @@ public class Model {
     }
 
     public void merge() {
+        merge(getSession());
+    }
+
+    public void merge(Session session) {
         beforeMerge();
-        getSession().merge(this);
+        session.merge(this);
         afterMerge();
     }
 }

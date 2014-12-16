@@ -1,7 +1,8 @@
-package com.zoowii.jpa_utils.demo.models;
+package com.zoowii.jpa_utils.test.models;
 
 import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.query.Finder;
+import com.zoowii.jpa_utils.util.StringUtil;
 
 import javax.persistence.*;
 
@@ -9,8 +10,8 @@ import javax.persistence.*;
 @Table(name = "employee")
 public class Employee extends Model {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+//    @GeneratedValue(strategy = GenerationType.AUTO)
+    private String id = StringUtil.randomString(30);
 
     @Column(nullable = false)
     private String name;
@@ -33,13 +34,13 @@ public class Employee extends Model {
         this.name = name;
     }
 
-    public Integer getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public static Finder<Integer, Employee> find = new Finder<Integer, Employee>(Integer.class, Employee.class);
+    public static Finder<String, Employee> find = new Finder<String, Employee>(String.class, Employee.class);
 }

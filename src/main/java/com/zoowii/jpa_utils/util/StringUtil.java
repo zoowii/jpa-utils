@@ -4,6 +4,14 @@ import java.util.List;
 import java.util.Random;
 
 public class StringUtil {
+    public static boolean isEmpty(String str) {
+        return str == null || str.trim().length() < 1;
+    }
+
+    public static boolean notEmpty(String str) {
+        return !isEmpty(str);
+    }
+
     public static String randomString(int n) {
         if (n < 1) {
             n = 1;

@@ -6,3 +6,5 @@
 /*.log
 /*.pid
 /dependency-reduced-pom.xml
+/logs
+/*.out

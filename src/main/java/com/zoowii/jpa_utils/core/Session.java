@@ -33,11 +33,15 @@ public class Session {
         return SessionFactory.getDefaultSessionFactory().currentSession();
     }
 
+    public static Session getSession(String persistenceUnit) {
+        return SessionFactory.getSessionFactory(persistenceUnit).currentSession();
+    }
+
     private Session() {
     }
 
-    public Session(EntityManagerFactory emf) {
-        this.em = em;
+    public Session(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     public EntityManager getEntityManager() {
