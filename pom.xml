@@ -6,7 +6,7 @@
 
     <groupId>com.zoowii</groupId>
     <artifactId>jpa-utils</artifactId>
-    <version>1.9.10</version>
+    <version>1.9.11</version>
     <packaging>jar</packaging>
     <repositories>
     </repositories>
