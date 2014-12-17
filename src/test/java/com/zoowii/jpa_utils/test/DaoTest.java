@@ -14,7 +14,7 @@ public class DaoTest extends TestCase {
     private static final Logger logger = Logger.getLogger(DaoTest.class);
 
     public void testCreate() {
-        Session session = Session.getSession("mysql");
+        Session session = Session.getSession("persistenceUnit");
         session.begin();
         try {
             for (int i = 0; i < 10; ++i) {
@@ -34,17 +34,17 @@ public class DaoTest extends TestCase {
     }
 
     public void testQuery() {
-        Session session = Session.getSession("mysql");
+        Session session = Session.getSession("persistenceUnit");
         session.begin();
         try {
             Query<Employee> query = Employee.find.where().gt("age", 50);
             query = query.limit(8);
-            List<Employee> employees = query.all();
+            List<Employee> employees = query.all(session);
             for (int i = 0; i < employees.size(); ++i) {
                 Employee employee = employees.get(i);
                 logger.info((i + 1) + ". employee " + employee.getId());
             }
-            logger.info("total: " + query.count());
+            logger.info("total: " + query.count(session));
             session.commit();
         } catch (Exception e) {
             e.printStackTrace();

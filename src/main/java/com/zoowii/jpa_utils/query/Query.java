@@ -1,6 +1,7 @@
 package com.zoowii.jpa_utils.query;
 
 import com.google.common.base.Function;
+import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.StringUtil;
@@ -11,11 +12,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class Query<M extends Model> {
     protected String tableName = null;  // TODO: select from multi-tables
-    protected Class cls = null;
+    protected Class<?> cls = null;
     protected List<OrderBy> orderBys = new ArrayList<OrderBy>();
     protected Expr condition = Expr.dummy();
     protected String _tableSymbol = null;
@@ -38,7 +38,7 @@ public class Query<M extends Model> {
         this.tableName = tableName;
     }
 
-    public Query(Class cls) {
+    public Query(Class<?> cls) {
         this.cls = cls;
         this.tableName = cls.getSimpleName();
     }
@@ -157,7 +157,7 @@ public class Query<M extends Model> {
         return StringUtil.join(orderByStrs, ",");
     }
 
-    public Map<String, Object> toQuery() {
+    public QueryInfo toQuery() {
         String queryStr = "from " + tableName + " ";
         Map<String, Object> exprQuery = this.condition != null ? this.condition.toQueryString(this) : null;
         if (exprQuery != null) {
@@ -170,26 +170,30 @@ public class Query<M extends Model> {
         if (exprQuery != null) {
             bindings = (ParameterBindings) exprQuery.get("bindings");
         }
-        Map<String, Object> extras = ListUtil.hashmap("dummy", "dummy");
+        QueryExtras extras = new QueryExtras();
         if (this._limit >= 0) {
-            extras.put("max", this._limit);
+            extras.setMax(this._limit);
         }
         if (this._offset >= 0) {
-            extras.put("offset", this._offset);
+            extras.setOffset(this._offset);
         }
-        return ListUtil.hashmap("query", queryStr, "bindings", bindings, "extras", extras);
+        return new QueryInfo(queryStr, bindings, extras);
     }
 
-    public long count() {
+    public long count(Session session) {
         if (this.cls == null) {
             throw new RuntimeException("you need pass a model class");
         }
-        return count(this.cls);
+        return count(session, this.cls);
     }
 
-    public long count(Class model) {
+    public long count() {
+        return count(M.getSession());
+    }
+
+    public long count(Session session, Class<?> model) {
         // 不能直接getSingleResult,因为在分布式mysql集群中,count语句可能返回多个值
-        List result = getTypedQuery(Long.class, new Function<String, String>() {
+        List result = getTypedQuery(session, Long.class, new Function<String, String>() {
             @Override
             public String apply(String s) {
                 return "select count(*) " + s;
@@ -209,29 +213,45 @@ public class Query<M extends Model> {
         });
     }
 
+    public long count(Class<?> model) {
+        return count(M.getSession(), model);
+    }
+
     public List<M> all() {
+        return all(M.getSession());
+    }
+
+    public List<M> all(Session session) {
         if (this.cls == null) {
             throw new RuntimeException("you need pass a model class");
         }
-        return all(this.cls);
+        return all(session, this.cls);
     }
 
-    public TypedQuery getTypedQuery(Class model) {
-        return getTypedQuery(model, null);
+    public TypedQuery getTypedQuery(Session session, Class<?> model) {
+        return getTypedQuery(session, model, null);
+    }
+
+    public TypedQuery getTypedQuery(Class<?> model) {
+        return getTypedQuery(M.getSession(), model);
+    }
+
+    public TypedQuery getTypedQuery(Class<?> model, Function<String, String> queryWrapper) {
+        return getTypedQuery(M.getSession(), model, queryWrapper);
     }
 
     /**
      * @param model        要查询的model
      * @param queryWrapper 用来对HQL进行二次处理,处理后再用来执行
      */
-    public TypedQuery getTypedQuery(Class model, Function<String, String> queryWrapper) {
-        Map<String, Object> query = this.toQuery();
-        String queryString = (String) query.get("query");
+    public TypedQuery getTypedQuery(Session session, Class<?> model, Function<String, String> queryWrapper) {
+        QueryInfo query = this.toQuery();
+        String queryString = query.getQueryString();
         if (queryWrapper != null) {
             queryString = queryWrapper.apply(queryString);
         }
-        TypedQuery typedQuery = M.getSession().getEntityManager().createQuery(queryString, model);
-        ParameterBindings bindings = (ParameterBindings) query.get("bindings");
+        TypedQuery typedQuery = session.getEntityManager().createQuery(queryString, model);
+        ParameterBindings bindings = query.getParameterBindings();
         if (bindings != null) {
             for (int i = 0; i < bindings.getIndexBindings().size(); ++i) {
                 typedQuery.setParameter(i + 1, bindings.getIndexBindings().get(i));
@@ -240,42 +260,66 @@ public class Query<M extends Model> {
                 typedQuery.setParameter(key, bindings.getMapBindings().get(key));
             }
         }
-        Map<String, Object> extras = (Map<String, Object>) query.get("extras");
+        QueryExtras extras = query.getExtras();
         if (extras != null) {
-            if (extras.containsKey("max")) {
-                typedQuery.setMaxResults((Integer) extras.get("max"));
+            if (extras.getMax() >= 0) {
+                typedQuery.setMaxResults(extras.getMax());
             }
-            if (extras.containsKey("offset")) {
-                typedQuery.setFirstResult((Integer) extras.get("offset"));
+            if (extras.getOffset() >= 0) {
+                typedQuery.setFirstResult(extras.getOffset());
             }
         }
         return typedQuery;
     }
 
     public List<M> findList() {
-        return all();
+        return findList(M.getSession());
     }
 
-    public List<M> all(Class model) {
-        return getTypedQuery(model).getResultList();
+    public List<M> findList(Session session) {
+        return all(session);
+    }
+
+    public List<M> all(Class<?> model) {
+        return all(M.getSession(), model);
+    }
+
+    public List<M> all(Session session, Class<?> model) {
+        return getTypedQuery(session, model).getResultList();
     }
 
     public M first() {
+        return first(M.getSession());
+    }
+
+    public M first(Session session) {
         if (this.cls == null) {
             throw new RuntimeException("you need pass a model class");
         }
-        return first(this.cls);
+        return first(session, this.cls);
     }
 
     public M findUnique() {
-        return first();
+        return findUnique(M.getSession());
     }
 
-    public M first(Class model) {
-        return (M) ListUtil.first(getTypedQuery(model).setMaxResults(1).getResultList());
+    public M findUnique(Session session) {
+        return first(session);
     }
 
-    public M single(Class model) {
-        return (M) getTypedQuery(model).setMaxResults(1).getSingleResult();
+    public M first(Class<?> model) {
+        return first(M.getSession(), model);
+    }
+
+    public M first(Session session, Class<?> model) {
+        return (M) ListUtil.first(getTypedQuery(session, model).setMaxResults(1).getResultList());
+    }
+
+    public M single(Class<?> model) {
+        return single(M.getSession(), model);
+    }
+
+    public M single(Session session, Class<?> model) {
+        return (M) getTypedQuery(session, model).setMaxResults(1).getSingleResult();
     }
 }

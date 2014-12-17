@@ -16,18 +16,18 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate)
     <dependency>
          <groupId>com.zoowii</groupId>
          <artifactId>jpa-utils</artifactId>
-         <version>1.9.9</version>
+         <version>x.y.z</version>
     </dependency>
 
     // create
-    Session session = Session.currentSession();
+    Session session = Session.currentSession(); // or Session.getSession(persistentUnitName);
     session.begin();
     try {
         for (int i = 0; i < 10; ++i) {
             Employee employee = new Employee();
             employee.setName("employee_" + StringUtil.randomString(10));
             employee.setAge(new Random().nextInt(100));
-            employee.save();
+            employee.save(); // or employee.save(session);
             logger.info("new employee " + employee.getId());
         }
         session.commit();
@@ -42,19 +42,14 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate)
     try {
         Query<Employee> query = Employee.find.where().gt("age", 50);
         query = query.limit(8);
-        List<Employee> employees = query.all();
+        List<Employee> employees = query.all(); // or query.all(session);
         for (int i = 0; i < employees.size(); ++i) {
             Employee employee = employees.get(i);
             logger.info((i + 1) + ". employee " + employee.getId());
         }
-        logger.info("total: " + query.count());
+        logger.info("total: " + query.count()); // or query.count(session);
         session.commit();
     } catch (Exception e) {
         e.printStackTrace();
         session.rollback();
     }
-
-
-## TODO
-
-* 给Finder操作加上可选的session
