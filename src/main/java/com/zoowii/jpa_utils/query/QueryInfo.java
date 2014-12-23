@@ -37,4 +37,9 @@ public class QueryInfo {
         this.parameterBindings = parameterBindings;
         this.extras = extras;
     }
+
+    public QueryInfo(String queryString, ParameterBindings parameterBindings) {
+        this.queryString = queryString;
+        this.parameterBindings = parameterBindings;
+    }
 }

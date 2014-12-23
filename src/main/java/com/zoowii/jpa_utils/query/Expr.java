@@ -29,9 +29,8 @@ public class Expr {
 
     public static class EmptyExpr extends Expr {
         @Override
-        public Map<String, Object> toQueryString(Query query) {
-            return ListUtil.hashmap("query",
-                    "1=1", "bindings", new ParameterBindings());
+        public QueryInfo toQueryString(Query query) {
+            return new QueryInfo("1=1", new ParameterBindings());
         }
     }
 
@@ -127,15 +126,19 @@ public class Expr {
     /**
      * parse to Query string and bindings
      */
-    public Map<String, Object> toQueryString(Query query) {
+    public QueryInfo toQueryString(Query query) {
+        return toQueryString();
+    }
+
+    public QueryInfo toQueryString() {
         if (isNullOrNotNullExpr()) {
             String queryStr = items.get(0) + " " + (op.equals(EQ) ? "is null" : "is not null");
-            return ListUtil.hashmap("query", queryStr, "bindings", new ParameterBindings());
+            return new QueryInfo(queryStr, new ParameterBindings());
         }
         String queryStr = items.get(0) + " " + op + " ?";
 //        List<Object> bindings = ListUtil.seq((Object) items.get(1));
         ParameterBindings bindings = new ParameterBindings();
         bindings.addIndexBinding(items.get(1));
-        return ListUtil.hashmap("query", queryStr, "bindings", bindings);
+        return new QueryInfo(queryStr, bindings);
     }
 }

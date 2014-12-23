@@ -1,20 +1,22 @@
 package com.zoowii.jpa_utils.query;
 
 import com.google.common.base.Function;
+import com.zoowii.jpa_utils.core.IWrappedQuery;
+import com.zoowii.jpa_utils.core.IWrappedTypedQuery;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.util.ListUtil;
+import com.zoowii.jpa_utils.util.ModelUtils;
 import com.zoowii.jpa_utils.util.StringUtil;
 import com.zoowii.jpa_utils.util.functions.Function2;
 
-import javax.persistence.TypedQuery;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Query<M extends Model> {
-    protected String tableName = null;  // TODO: select from multi-tables
+public class Query<M> {
+    protected String tableName = null;
     protected Class<?> cls = null;
     protected List<OrderBy> orderBys = new ArrayList<OrderBy>();
     protected Expr condition = Expr.dummy();
@@ -40,7 +42,7 @@ public class Query<M extends Model> {
 
     public Query(Class<?> cls) {
         this.cls = cls;
-        this.tableName = cls.getSimpleName();
+        this.tableName = cls.getSimpleName(); // 这里使用类名而不是@Table(name=...)是因为HQL使用的是类名
     }
 
     public Query<M> limit(int limit) {
@@ -159,16 +161,16 @@ public class Query<M extends Model> {
 
     public QueryInfo toQuery() {
         String queryStr = "from " + tableName + " ";
-        Map<String, Object> exprQuery = this.condition != null ? this.condition.toQueryString(this) : null;
+        QueryInfo exprQuery = this.condition != null ? this.condition.toQueryString(this) : null;
         if (exprQuery != null) {
-            queryStr += " where " + exprQuery.get("query");
+            queryStr += " where " + exprQuery.getQueryString();
         }
         if (this.orderBys.size() > 0) {
             queryStr += " order by " + this.getOrderByString();
         }
         ParameterBindings bindings = new ParameterBindings();
         if (exprQuery != null) {
-            bindings = (ParameterBindings) exprQuery.get("bindings");
+            bindings = exprQuery.getParameterBindings();
         }
         QueryExtras extras = new QueryExtras();
         if (this._limit >= 0) {
@@ -188,7 +190,7 @@ public class Query<M extends Model> {
     }
 
     public long count() {
-        return count(M.getSession());
+        return count(Model.getSession());
     }
 
     public long count(Session session, Class<?> model) {
@@ -214,11 +216,11 @@ public class Query<M extends Model> {
     }
 
     public long count(Class<?> model) {
-        return count(M.getSession(), model);
+        return count(Model.getSession(), model);
     }
 
     public List<M> all() {
-        return all(M.getSession());
+        return all(Model.getSession());
     }
 
     public List<M> all(Session session) {
@@ -228,29 +230,30 @@ public class Query<M extends Model> {
         return all(session, this.cls);
     }
 
-    public TypedQuery getTypedQuery(Session session, Class<?> model) {
+    public IWrappedQuery getTypedQuery(Session session, Class<?> model) {
         return getTypedQuery(session, model, null);
     }
 
-    public TypedQuery getTypedQuery(Class<?> model) {
-        return getTypedQuery(M.getSession(), model);
+    public IWrappedQuery getTypedQuery(Class<?> model) {
+        return getTypedQuery(Model.getSession(), model);
     }
 
-    public TypedQuery getTypedQuery(Class<?> model, Function<String, String> queryWrapper) {
-        return getTypedQuery(M.getSession(), model, queryWrapper);
+    public IWrappedQuery getTypedQuery(Class<?> model, Function<String, String> queryWrapper) {
+        return getTypedQuery(Model.getSession(), model, queryWrapper);
     }
 
     /**
      * @param model        要查询的model
      * @param queryWrapper 用来对HQL进行二次处理,处理后再用来执行
      */
-    public TypedQuery getTypedQuery(Session session, Class<?> model, Function<String, String> queryWrapper) {
+    public IWrappedQuery getTypedQuery(Session session, Class<?> model, Function<String, String> queryWrapper) {
         QueryInfo query = this.toQuery();
         String queryString = query.getQueryString();
         if (queryWrapper != null) {
             queryString = queryWrapper.apply(queryString);
         }
-        TypedQuery typedQuery = session.getEntityManager().createQuery(queryString, model);
+        IWrappedQuery typedQuery = session.createQuery(model, queryString);
+//        TypedQuery typedQuery = session.getEntityManager().createQuery(queryString, model);
         ParameterBindings bindings = query.getParameterBindings();
         if (bindings != null) {
             for (int i = 0; i < bindings.getIndexBindings().size(); ++i) {
@@ -273,7 +276,7 @@ public class Query<M extends Model> {
     }
 
     public List<M> findList() {
-        return findList(M.getSession());
+        return findList(Model.getSession());
     }
 
     public List<M> findList(Session session) {
@@ -281,7 +284,7 @@ public class Query<M extends Model> {
     }
 
     public List<M> all(Class<?> model) {
-        return all(M.getSession(), model);
+        return all(Model.getSession(), model);
     }
 
     public List<M> all(Session session, Class<?> model) {
@@ -289,7 +292,7 @@ public class Query<M extends Model> {
     }
 
     public M first() {
-        return first(M.getSession());
+        return first(Model.getSession());
     }
 
     public M first(Session session) {
@@ -300,7 +303,7 @@ public class Query<M extends Model> {
     }
 
     public M findUnique() {
-        return findUnique(M.getSession());
+        return findUnique(Model.getSession());
     }
 
     public M findUnique(Session session) {
@@ -308,7 +311,7 @@ public class Query<M extends Model> {
     }
 
     public M first(Class<?> model) {
-        return first(M.getSession(), model);
+        return first(Model.getSession(), model);
     }
 
     public M first(Session session, Class<?> model) {
@@ -316,7 +319,7 @@ public class Query<M extends Model> {
     }
 
     public M single(Class<?> model) {
-        return single(M.getSession(), model);
+        return single(Model.getSession(), model);
     }
 
     public M single(Session session, Class<?> model) {

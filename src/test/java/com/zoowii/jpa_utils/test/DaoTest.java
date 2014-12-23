@@ -1,6 +1,8 @@
 package com.zoowii.jpa_utils.test;
 
+import com.zoowii.jpa_utils.core.impl.EntitySession;
 import com.zoowii.jpa_utils.core.Session;
+import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.test.models.Employee;
 import com.zoowii.jpa_utils.query.Query;
 import com.zoowii.jpa_utils.util.StringUtil;
@@ -14,7 +16,7 @@ public class DaoTest extends TestCase {
     private static final Logger logger = Logger.getLogger(DaoTest.class);
 
     public void testCreate() {
-        Session session = Session.getSession("persistenceUnit");
+        Session session = EntitySession.getSession("persistenceUnit");
         session.begin();
         try {
             for (int i = 0; i < 10; ++i) {
@@ -34,9 +36,10 @@ public class DaoTest extends TestCase {
     }
 
     public void testQuery() {
-        Session session = Session.getSession("persistenceUnit");
+        Session session = EntitySession.getSession("persistenceUnit");
         session.begin();
         try {
+            session.delete(Employee.class, Expr.createGT("age", 50));
             Query<Employee> query = Employee.find.where().gt("age", 50);
             query = query.limit(8);
             List<Employee> employees = query.all(session);

@@ -1,15 +1,22 @@
 package com.zoowii.jpa_utils.orm;
 
 
+import com.zoowii.jpa_utils.core.impl.EntitySession;
 import com.zoowii.jpa_utils.core.Session;
+import com.zoowii.jpa_utils.query.Expr;
 
 import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public class Model {
 
+    /**
+     * 默认使用JPA的方式，如果有需要，请在执行DB操作时手动传入session
+     *
+     * @return
+     */
     public static Session getSession() {
-        return Session.currentSession();
+        return EntitySession.currentSession();
     }
 
     public void beforeSave() {
