@@ -1,7 +1,7 @@
 package com.zoowii.jpa_utils.core.impl;
 
+import com.zoowii.jpa_utils.core.AbstractSessionFactory;
 import com.zoowii.jpa_utils.core.Session;
-import com.zoowii.jpa_utils.core.SessionFactory;
 import com.zoowii.jpa_utils.util.StringUtil;
 
 import javax.persistence.EntityManagerFactory;
@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by zoowii on 2014/10/18.
  */
-public class EntitySessionFactory extends SessionFactory {
+public class EntitySessionFactory extends AbstractSessionFactory {
     private final EntityManagerFactory emf;
     private static final Map<String, WeakReference<EntitySessionFactory>> defaultEntitySessionFactories = new ConcurrentHashMap<String, WeakReference<EntitySessionFactory>>();
 

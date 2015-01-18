@@ -1,13 +1,13 @@
 package com.zoowii.jpa_utils.core.impl;
 
 
+import com.zoowii.jpa_utils.core.AbstractSessionFactory;
 import com.zoowii.jpa_utils.core.Session;
-import com.zoowii.jpa_utils.core.SessionFactory;
 
 /**
  * Created by zoowii on 14-12-23.
  */
-public class HibernateSessionFactory extends SessionFactory {
+public class HibernateSessionFactory extends AbstractSessionFactory {
     private final org.hibernate.SessionFactory hibernateSessionFactory;
 
     public HibernateSessionFactory(org.hibernate.SessionFactory hibernateSessionFactory) {
