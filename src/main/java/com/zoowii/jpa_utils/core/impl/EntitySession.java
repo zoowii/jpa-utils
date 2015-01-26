@@ -47,7 +47,7 @@ public class EntitySession extends AbstractSession {
         this.sessionFactory = sessionFactory;
     }
 
-    public EntityManager getEntityManager() {
+    public synchronized EntityManager getEntityManager() {
         if (em == null) {
             em = getEntityManagerFactory().createEntityManager();
         }
