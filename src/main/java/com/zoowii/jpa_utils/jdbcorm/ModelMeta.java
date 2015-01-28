@@ -1,8 +1,9 @@
 package com.zoowii.jpa_utils.jdbcorm;
 
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
-import com.zoowii.jpa_utils.jdbcorm.sqlcolumntypes.MySQLColumnTypeMapper;
-import com.zoowii.jpa_utils.jdbcorm.sqlcolumntypes.SqlColumnTypeMapper;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
+import com.zoowii.jpa_utils.util.FieldAccessor;
 import com.zoowii.jpa_utils.util.StringUtil;
 import org.apache.log4j.Logger;
 
@@ -23,7 +24,7 @@ public class ModelMeta {
     private String tableSchema;
     private Set<ModelColumnMeta> columnMetas;
     private ModelColumnMeta idColumnMeta;
-    private SqlColumnTypeMapper sqlColumnTypeMapper;
+    private SqlMapper sqlMapper;
 
     /**
      * orm model类的列信息(映射到字段),胡烈所有@Transient注解了的字段
@@ -66,7 +67,7 @@ public class ModelMeta {
             // 根据columnType或者@Column和@Lob注解得到SQL字段类型
             boolean isLob = field.getAnnotation(javax.persistence.Lob.class) != null;
             try {
-                columnMeta.columnType = sqlColumnTypeMapper.get(field.getType(), columnAnno, isLob);
+                columnMeta.columnType = sqlMapper.get(field.getType(), columnAnno, isLob);
             } catch (JdbcRuntimeException e) {
                 LOG.error(e);
                 continue;
@@ -76,8 +77,8 @@ public class ModelMeta {
         return columnMetas;
     }
 
-    public ModelMeta(Class<?> modelCls, SqlColumnTypeMapper sqlColumnTypeMapper) {
-        this.sqlColumnTypeMapper = sqlColumnTypeMapper;
+    public ModelMeta(Class<?> modelCls, SqlMapper sqlMapper) {
+        this.sqlMapper = sqlMapper;
         // 获取orm model的元信息
         this.modelCls = modelCls;
         javax.persistence.Table table = modelCls.getAnnotation(javax.persistence.Table.class);
@@ -93,7 +94,7 @@ public class ModelMeta {
     }
 
     public ModelMeta(Class<?> modelCls) {
-        this(modelCls, new MySQLColumnTypeMapper()); // 默认使用mysql的SQL字段类型
+        this(modelCls, new MySQLMapper()); // 默认使用mysql的SQL字段类型
     }
 
     public Class<?> getModelCls() {
@@ -118,5 +119,25 @@ public class ModelMeta {
 
     public ModelColumnMeta getIdColumnMeta() {
         return idColumnMeta;
+    }
+
+    public ModelColumnMeta getColumnMetaByFieldName(String fieldName) {
+        for (ModelColumnMeta modelColumnMeta : getColumnMetaSet()) {
+            if (modelColumnMeta.fieldName.equals(fieldName)) {
+                return modelColumnMeta;
+            }
+        }
+        throw new JdbcRuntimeException("Can't find column meta info of field " + fieldName + " in model " + modelCls.getName());
+    }
+
+    public SqlMapper getSqlMapper() {
+        return sqlMapper;
+    }
+
+    public FieldAccessor getIdAccessor() {
+        if (idColumnMeta == null) {
+            return null;
+        }
+        return new FieldAccessor(modelCls, idColumnMeta.fieldName);
     }
 }

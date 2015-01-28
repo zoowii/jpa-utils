@@ -6,7 +6,7 @@
 
     <groupId>com.zoowii</groupId>
     <artifactId>jpa-utils</artifactId>
-    <version>1.9.13</version>
+    <version>1.9.14</version>
     <packaging>jar</packaging>
     <repositories>
     </repositories>
@@ -126,10 +126,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.30</version>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.2</version>
         </dependency>
+        <!--<dependency>-->
+        <!--<groupId>mysql</groupId>-->
+        <!--<artifactId>mysql-connector-java</artifactId>-->
+        <!--<version>5.1.30</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
