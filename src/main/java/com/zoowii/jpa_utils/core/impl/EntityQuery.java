@@ -2,6 +2,8 @@ package com.zoowii.jpa_utils.core.impl;
 
 import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.core.IWrappedTypedQuery;
+import com.zoowii.jpa_utils.core.Session;
+import com.zoowii.jpa_utils.query.ParameterBindings;
 
 import javax.persistence.Query;
 import java.util.List;
@@ -32,8 +34,18 @@ public class EntityQuery implements IWrappedQuery {
     }
 
     @Override
+    public IWrappedQuery setMaxResults(Session session, ParameterBindings parameterBindings, int limit) {
+        return setMaxResults(limit);
+    }
+
+    @Override
     public IWrappedQuery setFirstResult(int offset) {
         return new EntityQuery(originQuery.setFirstResult(offset));
+    }
+
+    @Override
+    public IWrappedQuery setFirstResult(Session session, ParameterBindings parameterBindings, int offset) {
+        return setFirstResult(offset);
     }
 
     @Override

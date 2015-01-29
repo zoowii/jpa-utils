@@ -1,5 +1,7 @@
 package com.zoowii.jpa_utils.query;
 
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
+
 public class OrderBy {
     private String sort = null;
     private boolean asc = false;

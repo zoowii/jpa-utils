@@ -6,7 +6,10 @@ import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.core.Transaction;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
+import com.zoowii.jpa_utils.jdbcorm.NamedParameterStatement;
 import com.zoowii.jpa_utils.jdbcorm.SqlStatementInfo;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.util.FieldAccessor;
 import org.apache.commons.beanutils.BeanUtils;
@@ -35,6 +38,7 @@ public class JdbcSession extends AbstractSession {
     private java.sql.Connection jdbcConnection;
     private JdbcSessionFactory jdbcSessionFactory;
     private AtomicBoolean activeFlag = new AtomicBoolean(false);
+    private SqlMapper sqlMapper = new MySQLMapper(); // FIXME
 
     public AtomicBoolean getActiveFlag() {
         return activeFlag;
@@ -72,6 +76,11 @@ public class JdbcSession extends AbstractSession {
     }
 
     @Override
+    public SqlMapper getSqlMapper() {
+        return sqlMapper;
+    }
+
+    @Override
     public Transaction getTransaction() {
         return new JdbcTransaction(this);
     }
@@ -101,12 +110,6 @@ public class JdbcSession extends AbstractSession {
         }
     }
 
-    public ModelMeta getEntityMetaOfClass(Class<?> entityCls) {
-        // TODO: 根据数据库类型产生不同的SqlColumnTypeMapper
-        // TODO: cache
-        return new ModelMeta(entityCls);
-    }
-
     private PreparedStatement prepareStatement(String sql) {
         try {
             return getJdbcConnection().prepareStatement(sql);
@@ -134,25 +137,29 @@ public class JdbcSession extends AbstractSession {
             ModelMeta modelMeta = getEntityMetaOfClass(entity.getClass());
             SqlStatementInfo insertSqlInfo = modelMeta.getSqlMapper().getInsert(modelMeta, entity);
             LOG.info("insert sql: " + insertSqlInfo.getSql());
-            PreparedStatement pstm = getJdbcConnection().prepareStatement(insertSqlInfo.getSql(), java.sql.Statement.RETURN_GENERATED_KEYS);
-            ParameterBindings parameterBindings = insertSqlInfo.getParameterBindings();
-            parameterBindings.applyToPrepareStatement(pstm);
-            int changedCount = pstm.executeUpdate();
-            if (changedCount < 1) {
-                throw new JdbcRuntimeException("No record affected when save entity");
-            }
-            FieldAccessor idAccessor = modelMeta.getIdAccessor();
-            if (idAccessor != null && idAccessor.getProperty(entity) == null) {
-                ResultSet generatedKeysResultSet = pstm.getGeneratedKeys();
-                try {
-                    if (generatedKeysResultSet.next()) {
-                        Object generatedId = generatedKeysResultSet.getObject(1);
-                        idAccessor.setProperty(entity, generatedId);
-                        // TODO: reflesh entity properties
-                    }
-                } finally {
-                    generatedKeysResultSet.close();
+            NamedParameterStatement pstm = new NamedParameterStatement(getJdbcConnection(), insertSqlInfo.getSql(), java.sql.Statement.RETURN_GENERATED_KEYS);
+            try {
+                ParameterBindings parameterBindings = insertSqlInfo.getParameterBindings();
+                parameterBindings.applyToNamedPrepareStatement(pstm);
+                int changedCount = pstm.executeUpdate();
+                if (changedCount < 1) {
+                    throw new JdbcRuntimeException("No record affected when save entity");
                 }
+                FieldAccessor idAccessor = modelMeta.getIdAccessor();
+                if (idAccessor != null && idAccessor.getProperty(entity) == null) {
+                    ResultSet generatedKeysResultSet = pstm.getStatement().getGeneratedKeys();
+                    try {
+                        if (generatedKeysResultSet.next()) {
+                            Object generatedId = generatedKeysResultSet.getObject(1);
+                            idAccessor.setProperty(entity, generatedId);
+                            refresh(entity);
+                        }
+                    } finally {
+                        generatedKeysResultSet.close();
+                    }
+                }
+            } finally {
+                pstm.close();
             }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
@@ -171,8 +178,13 @@ public class JdbcSession extends AbstractSession {
                 }
             });
             LOG.info("update sql: " + updateSqlInfo.getSql());
-            QueryRunner runner = new QueryRunner();
-            runner.update(getJdbcConnection(), updateSqlInfo.getSql(), updateSqlInfo.getParameterBindings().getIndexParametersArray());
+            NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), updateSqlInfo.getSql());
+            try {
+                updateSqlInfo.getParameterBindings().applyToNamedPrepareStatement(namedParameterStatement);
+                namedParameterStatement.executeUpdate();
+            } finally {
+                namedParameterStatement.close();
+            }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
         }
@@ -201,11 +213,11 @@ public class JdbcSession extends AbstractSession {
         }
     }
 
-    private ResultSetHandler<List<Object>> getListResultSetHandler(Class<?> cls) {
+    public static ResultSetHandler<List<Object>> getListResultSetHandler(Class<?> cls) {
         return new BeanListHandler(cls); // TODO: 使用modelMeta来自定义row processor
     }
 
-    private ResultSetHandler<Object> getRowBeanResultSetHandler(Class<?> cls) {
+    public static ResultSetHandler<Object> getRowBeanResultSetHandler(Class<?> cls) {
         return new BeanHandler(cls); // TODO: 使用modelMeta来自定义row processor
     }
 
@@ -230,13 +242,25 @@ public class JdbcSession extends AbstractSession {
             String whereSql = modelMeta.getSqlMapper().getWhereSubSql(conditionSql);
             String sql = selectSql + fromSql + whereSql;
             LOG.info("query sql " + sql);
-            QueryRunner runner = new QueryRunner();
+//            QueryRunner runner = new QueryRunner();
             ResultSetHandler<List<Object>> handler = getListResultSetHandler(cls);
-            List<Object> result = runner.query(getJdbcConnection(), sql, handler, parameterBindings.getIndexParametersArray());
-            if (result.size() > 0) {
-                return result.get(0);
-            } else {
-                return null;
+            NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
+            try {
+                parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
+                ResultSet resultSet = namedParameterStatement.executeQuery();
+                try {
+                    List<Object> result = handler.handle(resultSet);
+//            List<Object> result = runner.query(getJdbcConnection(), sql, handler, parameterBindings.getIndexParametersArray());
+                    if (result.size() > 0) {
+                        return result.get(0);
+                    } else {
+                        return null;
+                    }
+                } finally {
+                    resultSet.close();
+                }
+            } finally {
+                namedParameterStatement.close();
             }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
@@ -256,8 +280,13 @@ public class JdbcSession extends AbstractSession {
             String whereSql = modelMeta.getSqlMapper().getWhereSubSql(conditionSql);
             String sql = modelMeta.getSqlMapper().getDeleteSubSql(fromSql, whereSql);
             LOG.info("delete sql: " + sql);
-            QueryRunner runner = new QueryRunner();
-            runner.update(getJdbcConnection(), sql, parameterBindings.getIndexParametersArray());
+            NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
+            try {
+                parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
+                namedParameterStatement.executeUpdate();
+            } finally {
+                namedParameterStatement.close();
+            }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
         }
@@ -352,14 +381,22 @@ public class JdbcSession extends AbstractSession {
 
     @Override
     public IWrappedQuery createQuery(Class<?> cls, String queryString) {
-        // TODO
-        return null;
+        // FIXME
+        try {
+            return new JdbcQuery(queryString, new NamedParameterStatement(getJdbcConnection(), queryString), getEntityMetaOfClass(cls));
+        } catch (SQLException e) {
+            throw new JdbcRuntimeException(e);
+        }
     }
 
     @Override
     public IWrappedQuery createQuery(String queryString) {
-        // TODO
-        return null;
+        // FIXME
+        try {
+            return new JdbcQuery(queryString, new NamedParameterStatement(getJdbcConnection(), queryString), null);
+        } catch (SQLException e) {
+            throw new JdbcRuntimeException(e);
+        }
     }
 
     public int executeNativeSql(String sql, ParameterBindings parameterBindings) {

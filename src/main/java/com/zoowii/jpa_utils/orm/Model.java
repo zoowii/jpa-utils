@@ -1,6 +1,7 @@
 package com.zoowii.jpa_utils.orm;
 
 
+import com.zoowii.jpa_utils.core.AbstractSession;
 import com.zoowii.jpa_utils.core.impl.EntitySession;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.query.Expr;
@@ -16,7 +17,7 @@ public class Model {
      * @return
      */
     public static Session getSession() {
-        return EntitySession.currentSession();
+        return AbstractSession.currentSession();
     }
 
     public void beforeSave() {

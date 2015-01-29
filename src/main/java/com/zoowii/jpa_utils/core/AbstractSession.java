@@ -1,10 +1,15 @@
 package com.zoowii.jpa_utils.core;
 
+import com.zoowii.jpa_utils.core.impl.EntitySessionFactory;
+import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.query.QueryInfo;
 
+import java.lang.ref.WeakReference;
+import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -41,7 +46,7 @@ public abstract class AbstractSession implements Session {
 
     @Override
     public int delete(Class<?> model, Expr expr) {
-        QueryInfo exprQuery = expr.toQueryString();
+        QueryInfo exprQuery = expr.toQueryString(getSqlMapper());
         String sql = String.format("delete from %s where (%s)", model.getSimpleName(), exprQuery.getQueryString());
         IWrappedQuery query = createQuery(sql);
         ParameterBindings parameterBindings = exprQuery.getParameterBindings();
@@ -83,4 +88,43 @@ public abstract class AbstractSession implements Session {
         return getTransaction().isActive();
     }
 
+    @Override
+    public ModelMeta getEntityMetaOfClass(Class<?> entityCls) {
+        // TODO: cache
+        return new ModelMeta(entityCls, getSqlMapper());
+    }
+
+    /**
+     * 手动绑定到当前线程的session
+     */
+    private static final ThreadLocal<WeakReference<Session>> defaultThreadLocalSessions = new ThreadLocal<WeakReference<Session>>();
+
+    /**
+     * 优先检查是否有直接手动绑定到当前线程的session,没有就用EntitySessionFactory中的currentSession,并将结果作为手动绑定的session
+     *
+     * @return
+     */
+    public static Session currentSession() {
+        WeakReference<Session> defaultSession = defaultThreadLocalSessions.get();
+        if (defaultSession != null && defaultSession.get() != null) {
+            return defaultSession.get();
+        }
+        Session session = EntitySessionFactory.getDefaultEntitySessionFactory().currentSession();
+        defaultThreadLocalSessions.set(new WeakReference<Session>(session));
+        return session;
+    }
+
+    public static Session bindCurrentSession(Session session) {
+        defaultThreadLocalSessions.set(new WeakReference<Session>(session));
+        return session;
+    }
+
+    public static Session getSession(String persistenceUnit) {
+        return EntitySessionFactory.getEntitySessionFactory(persistenceUnit).currentSession();
+    }
+
+    @Override
+    public Session asThreadLocal() {
+        return bindCurrentSession(this);
+    }
 }

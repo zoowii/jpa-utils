@@ -1,6 +1,8 @@
 package com.zoowii.jpa_utils.core.impl;
 
 import com.zoowii.jpa_utils.core.*;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.ORMSqlMapper;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.query.QueryInfo;
@@ -16,6 +18,7 @@ import java.util.Map;
 public class EntitySession extends AbstractSession {
     private EntitySessionFactory sessionFactory = null;
     protected EntityManager em = null;
+    protected SqlMapper sqlMapper = new ORMSqlMapper();
 
     protected EntitySessionFactory getSessionFactory() {
         if (sessionFactory == null) {
@@ -26,14 +29,6 @@ public class EntitySession extends AbstractSession {
 
     protected EntityManagerFactory getEntityManagerFactory() {
         return getSessionFactory().getEntityManagerFactory();
-    }
-
-    public static Session currentSession() {
-        return EntitySessionFactory.getDefaultEntitySessionFactory().currentSession();
-    }
-
-    public static Session getSession(String persistenceUnit) {
-        return EntitySessionFactory.getEntitySessionFactory(persistenceUnit).currentSession();
     }
 
     protected EntitySession() {
@@ -52,6 +47,11 @@ public class EntitySession extends AbstractSession {
             em = getEntityManagerFactory().createEntityManager();
         }
         return em;
+    }
+
+    @Override
+    public SqlMapper getSqlMapper() {
+        return sqlMapper;
     }
 
     @Override

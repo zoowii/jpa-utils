@@ -4,6 +4,8 @@ import com.google.common.base.Function;
 import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.core.IWrappedTypedQuery;
 import com.zoowii.jpa_utils.core.Session;
+import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.ModelUtils;
@@ -25,6 +27,15 @@ public class Query<M> {
     protected int _offset = -1;
     protected Map<Integer, Object> indexParameters = new HashMap<Integer, Object>();
     protected Map<String, Object> mapParameters = new HashMap<String, Object>();
+    protected Session session;
+
+    public Session getSession() {
+        if (session != null) {
+            return session;
+        } else {
+            return Model.getSession();
+        }
+    }
 
     public String getTableSymbol() {
         if (_tableSymbol == null) {
@@ -36,12 +47,14 @@ public class Query<M> {
     /**
      * @param tableName maybe `User` or `User user`(then you can use user.name='abc' in expr)
      */
-    public Query(String tableName) {
+    public Query(String tableName, Session session) {
         this.tableName = tableName;
+        this.session = session;
     }
 
-    public Query(Class<?> cls) {
+    public Query(Class<?> cls, Session session) {
         this.cls = cls;
+        this.session = session;
         this.tableName = cls.getSimpleName(); // 这里使用类名而不是@Table(name=...)是因为HQL使用的是类名
     }
 
@@ -65,7 +78,7 @@ public class Query<M> {
     }
 
     public Query<M> clone() {
-        Query<M> query = new Query<M>(tableName);
+        Query<M> query = new Query<M>(tableName, session);
         query._limit = this._limit;
         query._offset = this._offset;
         query._tableSymbol = this._tableSymbol;
@@ -160,13 +173,15 @@ public class Query<M> {
     }
 
     public QueryInfo toQuery() {
-        String queryStr = "from " + tableName + " ";
-        QueryInfo exprQuery = this.condition != null ? this.condition.toQueryString(this) : null;
+        SqlMapper sqlMapper = session.getSqlMapper();
+        ModelMeta modelMeta = session.getEntityMetaOfClass(cls);
+        String queryStr = sqlMapper.getFromSubSql(modelMeta, false).getLeft();
+        QueryInfo exprQuery = this.condition != null ? this.condition.toQueryString(sqlMapper, this) : null;
         if (exprQuery != null) {
-            queryStr += " where " + exprQuery.getQueryString();
+            queryStr += sqlMapper.getWhereSubSql(exprQuery.getQueryString());
         }
         if (this.orderBys.size() > 0) {
-            queryStr += " order by " + this.getOrderByString();
+            queryStr += sqlMapper.getOrderBySubSql(this.getOrderByString());
         }
         ParameterBindings bindings = new ParameterBindings();
         if (exprQuery != null) {
@@ -190,7 +205,7 @@ public class Query<M> {
     }
 
     public long count() {
-        return count(Model.getSession());
+        return count(session);
     }
 
     public long count(Session session, Class<?> model) {
@@ -216,11 +231,11 @@ public class Query<M> {
     }
 
     public long count(Class<?> model) {
-        return count(Model.getSession(), model);
+        return count(session, model);
     }
 
     public List<M> all() {
-        return all(Model.getSession());
+        return all(session);
     }
 
     public List<M> all(Session session) {
@@ -239,7 +254,7 @@ public class Query<M> {
     }
 
     public IWrappedQuery getTypedQuery(Class<?> model, Function<String, String> queryWrapper) {
-        return getTypedQuery(Model.getSession(), model, queryWrapper);
+        return getTypedQuery(session, model, queryWrapper);
     }
 
     /**
@@ -249,34 +264,34 @@ public class Query<M> {
     public IWrappedQuery getTypedQuery(Session session, Class<?> model, Function<String, String> queryWrapper) {
         QueryInfo query = this.toQuery();
         String queryString = query.getQueryString();
+        queryString = session.getSqlMapper().wrapQueryWithDefaultSelect(session.getEntityMetaOfClass(model), queryString);
         if (queryWrapper != null) {
             queryString = queryWrapper.apply(queryString);
         }
         IWrappedQuery typedQuery = session.createQuery(model, queryString);
-//        TypedQuery typedQuery = session.getEntityManager().createQuery(queryString, model);
-        ParameterBindings bindings = query.getParameterBindings();
-        if (bindings != null) {
-            for (int i = 0; i < bindings.getIndexBindings().size(); ++i) {
-                typedQuery.setParameter(i + 1, bindings.getIndexBindings().get(i));
-            }
-            for (String key : bindings.getMapBindings().keySet()) {
-                typedQuery.setParameter(key, bindings.getMapBindings().get(key));
-            }
-        }
         QueryExtras extras = query.getExtras();
+        ParameterBindings bindings = query.getParameterBindings();
         if (extras != null) {
             if (extras.getMax() >= 0) {
-                typedQuery.setMaxResults(extras.getMax());
+                typedQuery = typedQuery.setMaxResults(session, bindings, extras.getMax());
             }
             if (extras.getOffset() >= 0) {
-                typedQuery.setFirstResult(extras.getOffset());
+                typedQuery = typedQuery.setFirstResult(session, bindings, extras.getOffset());
+            }
+        }
+        if (bindings != null) {
+            for (int i = 0; i < bindings.getIndexBindings().size(); ++i) {
+                typedQuery = typedQuery.setParameter(i + 1, bindings.getIndexBindings().get(i));
+            }
+            for (String key : bindings.getMapBindings().keySet()) {
+                typedQuery = typedQuery.setParameter(key, bindings.getMapBindings().get(key));
             }
         }
         return typedQuery;
     }
 
     public List<M> findList() {
-        return findList(Model.getSession());
+        return findList(session);
     }
 
     public List<M> findList(Session session) {
@@ -284,7 +299,7 @@ public class Query<M> {
     }
 
     public List<M> all(Class<?> model) {
-        return all(Model.getSession(), model);
+        return all(session, model);
     }
 
     public List<M> all(Session session, Class<?> model) {
@@ -292,7 +307,7 @@ public class Query<M> {
     }
 
     public M first() {
-        return first(Model.getSession());
+        return first(session);
     }
 
     public M first(Session session) {

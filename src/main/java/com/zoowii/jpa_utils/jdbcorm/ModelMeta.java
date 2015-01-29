@@ -69,7 +69,7 @@ public class ModelMeta {
             try {
                 columnMeta.columnType = sqlMapper.get(field.getType(), columnAnno, isLob);
             } catch (JdbcRuntimeException e) {
-                LOG.error(e);
+                LOG.debug(e);
                 continue;
             }
             columnMetas.add(columnMeta);
@@ -91,10 +91,6 @@ public class ModelMeta {
             tableSchema = table.schema();
         }
         columnMetas = getColumnMetas();
-    }
-
-    public ModelMeta(Class<?> modelCls) {
-        this(modelCls, new MySQLMapper()); // 默认使用mysql的SQL字段类型
     }
 
     public Class<?> getModelCls() {
@@ -127,7 +123,7 @@ public class ModelMeta {
                 return modelColumnMeta;
             }
         }
-        throw new JdbcRuntimeException("Can't find column meta info of field " + fieldName + " in model " + modelCls.getName());
+        return null;
     }
 
     public SqlMapper getSqlMapper() {

@@ -44,6 +44,10 @@ public class Finder<K, M> {
     }
 
     public Query<M> where() {
-        return new Query<M>(modelCls);
+        return new Query<M>(modelCls, Model.getSession());
+    }
+
+    public Query<M> where(Session session) {
+        return new Query<M>(modelCls, session);
     }
 }

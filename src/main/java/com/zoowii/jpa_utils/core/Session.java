@@ -1,5 +1,7 @@
 package com.zoowii.jpa_utils.core;
 
+import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.query.Expr;
 
 import java.util.List;
@@ -8,6 +10,11 @@ import java.util.List;
  * Created by zoowii on 14-12-23.
  */
 public interface Session {
+
+    public SqlMapper getSqlMapper();
+
+    public ModelMeta getEntityMetaOfClass(Class<?> entityCls);
+
     public Transaction getTransaction();
 
     public void begin();
@@ -83,5 +90,8 @@ public interface Session {
     public Object findSingleByNativeSql(String sql);
 
     public IWrappedQuery createQuery(Class<?> cls, String queryString);
+
     public IWrappedQuery createQuery(String queryString);
+
+    public Session asThreadLocal();
 }

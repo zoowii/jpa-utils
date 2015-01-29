@@ -4,6 +4,8 @@ import com.zoowii.jpa_utils.core.AbstractSession;
 import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.core.IWrappedTypedQuery;
 import com.zoowii.jpa_utils.core.Transaction;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.ORMSqlMapper;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.util.ListUtil;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
@@ -17,6 +19,7 @@ import java.util.List;
 public class HibernateSession extends AbstractSession {
     protected final HibernateSessionFactory hibernateSessionFactory;
     protected final org.hibernate.Session hibernateSession;
+    protected SqlMapper sqlMapper = new ORMSqlMapper();
 
     public HibernateSession(HibernateSessionFactory sessionFactory) {
         hibernateSessionFactory = sessionFactory;
@@ -26,6 +29,11 @@ public class HibernateSession extends AbstractSession {
     public HibernateSession(org.hibernate.Session hibernateSession) {
         this.hibernateSession = hibernateSession;
         hibernateSessionFactory = null;
+    }
+
+    @Override
+    public SqlMapper getSqlMapper() {
+        return sqlMapper;
     }
 
     public Transaction getTransaction() {

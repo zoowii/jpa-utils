@@ -1,5 +1,7 @@
 package com.zoowii.jpa_utils.core;
 
+import com.zoowii.jpa_utils.query.ParameterBindings;
+
 import java.util.List;
 
 /**
@@ -13,7 +15,11 @@ public interface IWrappedQuery {
 
     public IWrappedQuery setMaxResults(int limit);
 
+    public IWrappedQuery setMaxResults(Session session, ParameterBindings parameterBindings, int limit);
+
     public IWrappedQuery setFirstResult(int offset);
+
+    public IWrappedQuery setFirstResult(Session session, ParameterBindings parameterBindings, int offset);
 
     public List getResultList();
 

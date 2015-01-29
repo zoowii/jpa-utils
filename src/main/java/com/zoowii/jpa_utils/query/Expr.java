@@ -1,6 +1,9 @@
 package com.zoowii.jpa_utils.query;
 
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.ORMSqlMapper;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.util.ListUtil;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +32,7 @@ public class Expr {
 
     public static class EmptyExpr extends Expr {
         @Override
-        public QueryInfo toQueryString(Query query) {
+        public QueryInfo toQueryString(SqlMapper sqlMapper, Query query) {
             return new QueryInfo("1=1", new ParameterBindings());
         }
     }
@@ -126,19 +129,28 @@ public class Expr {
     /**
      * parse to Query string and bindings
      */
-    public QueryInfo toQueryString(Query query) {
-        return toQueryString();
-    }
-
-    public QueryInfo toQueryString() {
+    public QueryInfo toQueryString(SqlMapper sqlMapper, Query query) {
         if (isNullOrNotNullExpr()) {
             String queryStr = items.get(0) + " " + (op.equals(EQ) ? "is null" : "is not null");
             return new QueryInfo(queryStr, new ParameterBindings());
         }
-        String queryStr = items.get(0) + " " + op + " ?";
-//        List<Object> bindings = ListUtil.seq((Object) items.get(1));
         ParameterBindings bindings = new ParameterBindings();
-        bindings.addIndexBinding(items.get(1));
+        String queryStr = sqlMapper.getOpConditionSubSql(op, query.getSession().getEntityMetaOfClass(query.cls), items.get(0), items.get(1), bindings, null);
+//        String placement = sqlMapper.getNewParameterVar(bindings, "var", items.get(1)).getRight();
+//        String queryStr = items.get(0) + " " + op + " " + placement;
         return new QueryInfo(queryStr, bindings);
+    }
+
+    public QueryInfo toQueryString(SqlMapper sqlMapper) {
+//        if (isNullOrNotNullExpr()) {
+//            String queryStr = items.get(0) + " " + (op.equals(EQ) ? "is null" : "is not null");
+//            return new QueryInfo(queryStr, new ParameterBindings());
+//        }
+//        sqlMapper.getOpConditionSubSql(op, )
+//        ParameterBindings bindings = new ParameterBindings();
+//        String placement = sqlMapper.getNewParameterVar(bindings, "var", items.get(1)).getRight();
+//        String queryStr = items.get(0) + " " + op + " " + placement;
+//        return new QueryInfo(queryStr, bindings);
+        throw new NotImplementedException("need query object");
     }
 }

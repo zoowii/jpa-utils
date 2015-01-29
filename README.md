@@ -12,9 +12,12 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate) or direct hibernate
 ## Features
 
 * 底层基于JPA或者Hibernate的Session/SessionFactory，基于HQL/SQL，比自己再轮一个类HQL稳定
-* 可以自动从JPA配置创建管理session,也可以手动指定EntityManagerFactory/EntityManager/SessionFactory(hibernate)/Session(hibernate)来构造jpa-utils中的Session来使用
+* 也提供直接基于jdbc的支持,从而可以不依赖Hibernate等ORM,也方便直接和jdbc Connection, MyBatis, DbUtils, 数据库连接池等库直接集成使用
+* 直接基于jdbc Connection的话,ORM映射部分目前只支持MySQL和H2数据库,其他数据库待支持
+* 可以自动从JPA配置创建管理session,也可以手动指定EntityManagerFactory/EntityManager/SessionFactory(hibernate)/Session(hibernate)来构造jpa-utils中的Session来使用,还可以直接从jdbc Connection构造Session
 * 提供类似ActiveRecord的使用方便友好的API，特别是查询API
 * 查询的核心Finder类可以单独使用，直接使用到现有的使用JPA或Hibernate的代码中，只需要根据现有EntityManager/Session(hibernate)构造一个jpa-utils的session，然后使用Finder类来查询就好了
+* 支持类似MyBatis的执行编程式XML中的SQL(TODO)
 
 ## Usages
 

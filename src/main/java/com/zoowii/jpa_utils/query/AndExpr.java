@@ -1,5 +1,7 @@
 package com.zoowii.jpa_utils.query;
 
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
+
 import java.util.List;
 
 public class AndExpr extends Expr {
@@ -11,11 +13,11 @@ public class AndExpr extends Expr {
     }
 
     @Override
-    public QueryInfo toQueryString(Query query) {
+    public QueryInfo toQueryString(SqlMapper sqlMapper, Query query) {
         Expr left = (Expr) items.get(0);
         Expr right = (Expr) items.get(1);
-        QueryInfo leftQuery = left.toQueryString(query);
-        QueryInfo rightQuery = right.toQueryString(query);
+        QueryInfo leftQuery = left.toQueryString(sqlMapper, query);
+        QueryInfo rightQuery = right.toQueryString(sqlMapper, query);
         String queryStr = "(" + leftQuery.getQueryString() + " " + op + " " + rightQuery.getQueryString() + ")";
         ParameterBindings bindings = new ParameterBindings();
         bindings = bindings.addAll(leftQuery.getParameterBindings());

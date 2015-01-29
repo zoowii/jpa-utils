@@ -49,25 +49,27 @@ public class DaoTest extends TestCase {
     public void testJdbc() {
         try {
             JdbcSessionFactory sessionFactory = getJdbcTestSessionFactory();
-            JdbcSession session = (JdbcSession) sessionFactory.createSession();
+            JdbcSession session = (JdbcSession) sessionFactory.createSession().asThreadLocal();
             session.begin();
             try {
-                session.executeNativeSql("create table if not exists jpa_user (id bigint auto_increment primary key, name varchar(500))");
+                session.executeNativeSql("drop table if exists jpa_user");
+                session.executeNativeSql("create table if not exists jpa_user (id varchar(50) primary key, name varchar(500), test_age int(11))");
                 for (int i = 0; i < 10; ++i) {
                     User user = new User();
                     user.setName("test_user_" + UUID.randomUUID().toString());
-                    user.save(session);
+                    user.setAge(new Random().nextInt(100));
+                    user.save();
                     LOG.info("new user's id is " + user.getId());
                     if (new Random().nextInt(10) > 5) {
                         LOG.info("test to delete the just inserted record");
-                        user.delete(session);
+                        user.delete();
                     }
                 }
                 List<User> users = session.findListByQuery(User.class, "select * from jpa_user");
                 LOG.info("there are " + users.size() + " records now");
                 for (User user1 : users) {
                     user1.setName("updated_user_name_" + UUID.randomUUID().toString());
-                    user1.update(session);
+                    user1.update();
                 }
                 if (users.size() > 0) {
                     User userToRefresh = new User();
@@ -79,7 +81,13 @@ public class DaoTest extends TestCase {
                     User userFound = (User) session.find(User.class, users.get(users.size() - 1).getId());
                     LOG.info(userFound.getName());
                 }
+
+                List<User> users1 = User.find.where(session).gt("age", 50).all();
+                LOG.info(users1.size() + "");
+                List<User> usersOfLimitAndOffset = User.find.where(session).limit(3).offset(2).all();
+                assertTrue(usersOfLimitAndOffset.size() <= 3);
             } catch (Exception e) {
+                e.printStackTrace();
                 session.rollback();
             } finally {
                 session.close();
@@ -91,7 +99,7 @@ public class DaoTest extends TestCase {
     }
 
     public void testCreate() {
-        Session session = EntitySession.getSession("persistenceUnit");
+        Session session = EntitySession.getSession("persistenceUnit"); // persistenceUnit/mysql/etc.
         session.begin();
         try {
             for (int i = 0; i < 10; ++i) {
@@ -111,10 +119,10 @@ public class DaoTest extends TestCase {
     }
 
     public void testQuery() {
-        Session session = EntitySession.getSession("persistenceUnit");
+        Session session = EntitySession.getSession("persistenceUnit"); // persistenceUnit/mysql/etc.
         session.begin();
         try {
-            session.delete(Employee.class, Expr.createGT("age", 50));
+//            session.delete(Employee.class, Expr.createGT("age", 50));
             Query<Employee> query = Employee.find.where().gt("age", 50);
             query = query.limit(8);
             List<Employee> employees = query.all(session);

@@ -1,7 +1,11 @@
 package com.zoowii.jpa_utils.jdbcorm.sqlmapper;
 
 import com.google.common.base.Function;
+import com.zoowii.jpa_utils.core.IWrappedQuery;
+import com.zoowii.jpa_utils.core.impl.JdbcQuery;
+import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
+import com.zoowii.jpa_utils.jdbcorm.NamedParameterStatement;
 import com.zoowii.jpa_utils.jdbcorm.SqlStatementInfo;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.util.FieldAccessor;
@@ -10,6 +14,7 @@ import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.StringUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,5 +85,35 @@ public class MySQLMapper extends SqlMapper {
     @Override
     public String getSqlTableNameWrapped(String tableName) {
         return String.format("`%s`", tableName);
+    }
+
+    @Override
+    public IWrappedQuery limit(IWrappedQuery query, ParameterBindings parameterBindings, int limit) {
+        assert query instanceof JdbcQuery;
+        JdbcQuery jdbcQuery = (JdbcQuery) query;
+        String var = "limit_" + incrementCircleNumber.getAndIncrement();
+        String sql = String.format(" %s LIMIT :%s ", jdbcQuery.getSql(), var);
+        try {
+            jdbcQuery = new JdbcQuery(sql, jdbcQuery.getNamedParameterStatement().clonePure(sql), jdbcQuery.getModelMeta());
+            parameterBindings.addBinding(var, limit);
+            return jdbcQuery;
+        } catch (SQLException e) {
+            throw new JdbcRuntimeException(e);
+        }
+    }
+
+    @Override
+    public IWrappedQuery offset(IWrappedQuery query, ParameterBindings parameterBindings, int offset) {
+        assert query instanceof JdbcQuery;
+        JdbcQuery jdbcQuery = (JdbcQuery) query;
+        String var = "offset_" + incrementCircleNumber.getAndIncrement();
+        String sql = String.format(" %s OFFSET :%s ", jdbcQuery.getSql(), var);
+        try {
+            jdbcQuery = new JdbcQuery(sql, jdbcQuery.getNamedParameterStatement().clonePure(sql), jdbcQuery.getModelMeta());
+            parameterBindings.addBinding(var, offset);
+            return jdbcQuery;
+        } catch (SQLException e) {
+            throw new JdbcRuntimeException(e);
+        }
     }
 }

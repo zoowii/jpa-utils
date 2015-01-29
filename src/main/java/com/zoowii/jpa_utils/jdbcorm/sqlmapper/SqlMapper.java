@@ -1,6 +1,7 @@
 package com.zoowii.jpa_utils.jdbcorm.sqlmapper;
 
 import com.google.common.base.Function;
+import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.SqlStatementInfo;
@@ -143,8 +144,9 @@ public abstract class SqlMapper {
             @Override
             public Object apply(Pair<String, String> pair) {
                 FieldAccessor fieldAccessor = new FieldAccessor(modelMeta.getModelCls(), pair.getLeft());
-                parameterBindings.addIndexBinding(fieldAccessor.getProperty(entity));
-                columnSetPairs.add(String.format("%s = ?", pair.getRight()));
+                String key = String.format("%s%s", pair.getLeft(), incrementCircleNumber.getAndIncrement() + "");
+                parameterBindings.addBinding(key, fieldAccessor.getProperty(entity));
+                columnSetPairs.add(String.format("%s = :%s", pair.getRight(), key));
                 return null;
             }
         });
@@ -181,13 +183,14 @@ public abstract class SqlMapper {
         for (Pair<String, String> columnNameAndSqlName : columnNameAndSqlNames) {
             String fieldName = columnNameAndSqlName.getLeft();
             FieldAccessor fieldAccessor = new FieldAccessor(modelMeta.getModelCls(), fieldName);
-            parameterBindings.addIndexBinding(fieldAccessor.getProperty(entity));
+//            parameterBindings.addIndexBinding(fieldAccessor.getProperty(entity));
+            parameterBindings.addBinding(fieldName, fieldAccessor.getProperty(entity));
         }
         String columnsSql = getColumnsSql(modelMeta, null, includeId);
         String valuesBindingSql = StringUtil.join(ListUtil.map(columnNameAndSqlNames, new Function<Pair<String, String>, String>() {
             @Override
-            public String apply(Pair<String, String> stringStringPair) {
-                return "?"; // String.format(":%s", stringStringPair.getLeft());
+            public String apply(Pair<String, String> pair) {
+                return String.format(":%s", pair.getLeft());
             }
         }), ",");
         String sql = String.format("INSERT INTO %s ( %s ) VALUES ( %s )", tableFullName, columnsSql, valuesBindingSql);
@@ -198,10 +201,21 @@ public abstract class SqlMapper {
         return " WHERE " + whereConditions;
     }
 
-    public String getEqConditionSubSql(ModelMeta modelMeta, String fieldName, Object value, ParameterBindings parameterBindings, String tableAlias) {
-        String columnName = modelMeta.getColumnMetaByFieldName(fieldName).columnName;
-        parameterBindings.addIndexBinding(value);
-        return String.format(" (%s = ?) ", tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName));
+    public String getOpConditionSubSql(String op, ModelMeta modelMeta, Object left, Object value, ParameterBindings parameterBindings, String tableAlias) {
+        ModelMeta.ModelColumnMeta columnMeta = modelMeta.getColumnMetaByFieldName(left.toString());
+        if (columnMeta == null) {
+            String key = "var_" + incrementCircleNumber.getAndIncrement();
+            parameterBindings.addBinding(key, value);
+            return String.format(" (%s %s :%s)", left, op, key);
+        }
+        String columnName = columnMeta.columnName;
+        String key = left.toString() + incrementCircleNumber.getAndIncrement();
+        parameterBindings.addBinding(key, value);
+        return String.format(" (%s %s :%s) ", tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName), op, key);
+    }
+
+    public String getEqConditionSubSql(ModelMeta modelMeta, Object fieldName, Object value, ParameterBindings parameterBindings, String tableAlias) {
+        return getOpConditionSubSql("=", modelMeta, fieldName, value, parameterBindings, tableAlias);
     }
 
     public String getIdEqConditionSubSql(ModelMeta modelMeta, Object value, ParameterBindings parameterBindings, String tableAlias) {
@@ -216,4 +230,41 @@ public abstract class SqlMapper {
     public String getDeleteSubSql(String fromSql, String whereSql) {
         return String.format("DELETE %s %s", fromSql, whereSql != null ? whereSql : "");
     }
+
+    public String getOrderBySubSql(String orderBy) {
+        return String.format(" ORDER BY %s ", orderBy);
+    }
+
+    /**
+     * 在HQL或者preparestatement的SQL中创建一个类似':abc', '?'的占位符,并修改ParameterBindings
+     *
+     * @param parameterBindings
+     * @param key
+     * @param value
+     * @return pair of {left: varName,比如abc, right: 占位符,比如:abc}
+     */
+    public Pair<String, String> getNewParameterVar(ParameterBindings parameterBindings, String key, Object value) {
+        String var = String.format("%s_%s", key, incrementCircleNumber.getAndIncrement() + "");
+        parameterBindings.addBinding(var, value);
+        return Pair.of(var, ":" + var);
+    }
+
+    /**
+     * 生成的中间查询可能是没有select子句的,比如HQL语句中的
+     *
+     * @param modelMeta
+     * @param sql
+     * @return
+     */
+    public String wrapQueryWithDefaultSelect(ModelMeta modelMeta, String sql) {
+        if (sql.trim().toUpperCase().startsWith("FROM".toUpperCase())) {
+            return " SELECT * " + sql;
+        } else {
+            return sql;
+        }
+    }
+
+    public abstract IWrappedQuery limit(IWrappedQuery query, ParameterBindings parameterBindings, int limit);
+
+    public abstract IWrappedQuery offset(IWrappedQuery query, ParameterBindings parameterBindings, int offset);
 }

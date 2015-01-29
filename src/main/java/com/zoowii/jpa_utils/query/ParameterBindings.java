@@ -1,6 +1,7 @@
 package com.zoowii.jpa_utils.query;
 
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
+import com.zoowii.jpa_utils.jdbcorm.NamedParameterStatement;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -48,6 +49,16 @@ public class ParameterBindings {
         try {
             for (int i = 0; i < getIndexBindings().size(); ++i) {
                 pstm.setObject(i + 1, getIndexBindings().get(i));
+            }
+        } catch (SQLException e) {
+            throw new JdbcRuntimeException(e);
+        }
+    }
+
+    public void applyToNamedPrepareStatement(NamedParameterStatement namedParameterStatement) {
+        try {
+            for (String key : getMapBindings().keySet()) {
+                namedParameterStatement.setObject(key, getMapBindings().get(key));
             }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);

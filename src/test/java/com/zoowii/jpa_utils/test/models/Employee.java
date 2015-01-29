@@ -10,8 +10,8 @@ import javax.persistence.*;
 @Table(name = "employee")
 public class Employee extends Model {
     @Id
-//    @GeneratedValue(strategy = GenerationType.AUTO)
-    private String id = StringUtil.randomString(30);
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Integer id; // = StringUtil.randomString(30);
 
     @Column(nullable = false)
     private String name;
@@ -34,11 +34,11 @@ public class Employee extends Model {
         this.name = name;
     }
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
