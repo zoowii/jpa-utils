@@ -73,6 +73,11 @@ public class HibernateSession extends AbstractSession {
     }
 
     @Override
+    public void clear() {
+        hibernateSession.clear();
+    }
+    
+    @Override
     public void refresh(Object entity) {
         hibernateSession.refresh(entity);
     }

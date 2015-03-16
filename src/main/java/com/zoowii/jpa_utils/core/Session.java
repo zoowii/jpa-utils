@@ -49,6 +49,11 @@ public interface Session {
 
     public void refresh(Object entity);
 
+    /**
+     * clear cache
+     */
+    public void clear();
+
     public Object find(Class<?> cls, Object id);
 
     public void delete(Object entity);

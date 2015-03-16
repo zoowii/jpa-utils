@@ -194,6 +194,11 @@ public class JdbcSession extends AbstractSession {
     public void merge(Object entity) {
 
     }
+    
+    @Override
+    public void clear() {
+
+    }
 
     @Override
     public void refresh(Object entity) {
