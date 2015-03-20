@@ -26,7 +26,7 @@ public class StringUtil {
         return buf.toString();
     }
 
-    public static String join(List<String> strs, String sep) {
+    public static String join(List<?> strs, String sep) {
         StringBuilder builder = new StringBuilder();
         if (strs == null) {
             return null;

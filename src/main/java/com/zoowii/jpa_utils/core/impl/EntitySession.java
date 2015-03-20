@@ -91,6 +91,8 @@ public class EntitySession extends AbstractSession {
     @Override
     public void update(Object entity) {
         getEntityManager().persist(entity);
+        flush();
+        clear();
     }
 
     @Override

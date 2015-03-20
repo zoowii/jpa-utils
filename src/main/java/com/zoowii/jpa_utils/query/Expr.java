@@ -19,6 +19,7 @@ public class Expr {
     public static final String OR = "or";
     public static final String AND = "and";
     public static final String LIKE = "like";
+    public static final String IN = "in";
     protected String op = null;
     protected List<Object> items = new ArrayList<Object>();
 
@@ -108,9 +109,17 @@ public class Expr {
     public static Expr createAND(Expr left, Expr right) {
         return new AndExpr(AND, ListUtil.seq((Object) left, right));
     }
+    
+    public static Expr createIN(String property, Object value) {
+        return new Expr(IN, ListUtil.seq(property, value));
+    }
 
     public Expr and(Expr other) {
         return createAND(this, other);
+    }
+    
+    public Expr in(String property, Object value) {
+        return createAND(this, createIN(property, value));
     }
 
     /**

@@ -103,6 +103,11 @@ public class Query<M> {
         this.condition = this.condition.eq(name, value);
         return this;
     }
+    
+    public Query<M> in(String property, Object value) {
+        this.condition = this.condition.in(property, value);
+        return this;
+    }
 
     public Query<M> ne(String name, Object value) {
         this.condition = this.condition.ne(name, value);

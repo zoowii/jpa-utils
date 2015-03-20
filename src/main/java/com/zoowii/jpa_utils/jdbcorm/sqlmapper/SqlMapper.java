@@ -5,6 +5,7 @@ import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.SqlStatementInfo;
+import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.util.FieldAccessor;
 import com.zoowii.jpa_utils.util.IncrementCircleNumber;
@@ -17,7 +18,6 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * TODO: 使用NamedPrepareStatement
  * 用来映射JAVA orm model的列类型到SQL数据库中的字段类型
  * Created by zoowii on 15/1/26.
  */
@@ -209,9 +209,16 @@ public abstract class SqlMapper {
             return String.format(" (%s %s :%s)", left, op, key);
         }
         String columnName = columnMeta.columnName;
+        String finalTable = tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName);
+        if(Expr.IN.equals(op)) {
+            if(value instanceof List) {
+                value = StringUtil.join((List<?>) value, ", ");
+            }
+            return String.format(" (%s %s (%s)) ", finalTable, op, value);
+        }
         String key = left.toString() + incrementCircleNumber.getAndIncrement();
         parameterBindings.addBinding(key, value);
-        return String.format(" (%s %s :%s) ", tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName), op, key);
+        return String.format(" (%s %s :%s) ", finalTable, op, key);
     }
 
     public String getEqConditionSubSql(ModelMeta modelMeta, Object fieldName, Object value, ParameterBindings parameterBindings, String tableAlias) {
