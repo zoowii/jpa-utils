@@ -92,11 +92,13 @@ public class DaoTest extends TestCase {
                 List<String> idsForInQuery = ListUtil.map(usersOfLimitAndOffset, new Function<User, String>() {
                     @Override
                     public String apply(User user) {
-                        return "'" +user.getId() + "'";
+                        return user.getId();
                     }
                 });
-                List<User> usersFromIn = User.find.where(session).in("id", StringUtil.join(idsForInQuery, ",")).all();
-                assertEquals(usersFromIn.size(), 3);
+                List<User> usersFromIn = User.find.where(session).in("id", idsForInQuery).all();
+                assertTrue(usersFromIn.size() > 0);
+                List<User> usersFromInSubQuery = User.find.where(session).in("id", "select id from jpa_user limit 4").all();
+                assertEquals(usersFromInSubQuery.size(), 4);
             } catch (Exception e) {
                 e.printStackTrace();
                 session.rollback();
@@ -120,6 +122,8 @@ public class DaoTest extends TestCase {
                 employee.save(session);
                 LOG.info("new employee " + employee.getId());
             }
+            List<Employee> employeesFromInQuery = Employee.find.where(session).in("id", "select id from Employee").all();
+            assertTrue(employeesFromInQuery.size() > 0);
             session.commit();
         } catch (Exception e) {
             e.printStackTrace();

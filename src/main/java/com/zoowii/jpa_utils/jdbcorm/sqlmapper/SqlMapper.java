@@ -212,6 +212,12 @@ public abstract class SqlMapper {
         String finalTable = tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName);
         if(Expr.IN.equals(op)) {
             if(value instanceof List) {
+                List<Object> valueList = (List<Object>) value;
+                for(int i=0;i<valueList.size();++i) {
+                    if(valueList.get(i) instanceof String) {
+                        valueList.set(i, String.format("'%s'", valueList.get(i)));
+                    }
+                }
                 value = StringUtil.join((List<?>) value, ", ");
             }
             return String.format(" (%s %s (%s)) ", finalTable, op, value);
