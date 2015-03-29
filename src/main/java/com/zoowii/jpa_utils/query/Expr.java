@@ -109,7 +109,7 @@ public class Expr {
     public static Expr createAND(Expr left, Expr right) {
         return new AndExpr(AND, ListUtil.seq((Object) left, right));
     }
-    
+
     public static Expr createIN(String property, Object value) {
         return new Expr(IN, ListUtil.seq(property, value));
     }
@@ -117,13 +117,13 @@ public class Expr {
     public Expr and(Expr other) {
         return createAND(this, other);
     }
-    
+
     public Expr in(String property, Object value) {
         return createAND(this, createIN(property, value));
     }
 
     /**
-     * 判断这个表达式是否is null或者is not null表达式
+     * whether this expr is `is null` or `is not null` sub sql
      *
      * @return
      */
@@ -137,6 +137,9 @@ public class Expr {
 
     /**
      * parse to Query string and bindings
+     * @param sqlMapper sql mapper to use
+     * @param query query instance
+     * @return query info 
      */
     public QueryInfo toQueryString(SqlMapper sqlMapper, Query query) {
         if (isNullOrNotNullExpr()) {

@@ -28,8 +28,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * TODO: 支持类似MyBatis的执行SQL的方法
- * TODO: 把SQL的构造整合到query/Expr包的通用构造方案中
+ * TODO: support methods like MyBatis
  * Created by zoowii on 15/1/26.
  */
 public class JdbcSession extends AbstractSession {
@@ -127,9 +126,9 @@ public class JdbcSession extends AbstractSession {
     }
 
     /**
-     * TODO: 考虑支持通过一些类似@Insert("... ${column}..."),@Update, @Delete, @Query的注解来自定义查询
+     * TODO: may add feature like @Insert("... ${column}..."),@Update, @Delete, @Query to define query
      *
-     * @param entity
+     * @param entity entity to save
      */
     @Override
     public void save(Object entity) {
@@ -219,19 +218,19 @@ public class JdbcSession extends AbstractSession {
     }
 
     public static ResultSetHandler<List<Object>> getListResultSetHandler(Class<?> cls) {
-        return new BeanListHandler(cls); // TODO: 使用modelMeta来自定义row processor
+        return new BeanListHandler(cls); // TODO: use modelMeta to define row processor
     }
 
     public static ResultSetHandler<Object> getRowBeanResultSetHandler(Class<?> cls) {
-        return new BeanHandler(cls); // TODO: 使用modelMeta来自定义row processor
+        return new BeanHandler(cls); // TODO: use modelMeta to define row processor
     }
 
     /**
-     * TODO: 改成使用通用的query模型
+     * TODO: change to common query model
      *
-     * @param cls
-     * @param id
-     * @return
+     * @param cls model cls to find
+     * @param id model primary key value
+     * @return found record
      */
     @Override
     public Object find(Class<?> cls, Object id) {

@@ -66,7 +66,7 @@ public class EntitySession extends AbstractSession {
     }
 
     /**
-     * 不需要手动自己调用,EntityManagerFactory的connection cleanup thread会自动清理
+     * the EntityManagerFactory's connection cleanup thread will clean it
      */
     @Override
     public void close() {
@@ -75,9 +75,6 @@ public class EntitySession extends AbstractSession {
         }
     }
 
-    /**
-     * 关闭整个EntityManagerFactory不能再使用它来创建EntityManager了
-     */
     @Override
     public void shutdown() {
         getSessionFactory().close();
@@ -157,9 +154,6 @@ public class EntitySession extends AbstractSession {
         return query.getSingleResult();
     }
 
-    /**
-     * 直接执行原生SQL活得结果
-     */
     @Override
     public List findListByRawQuery(Class<?> cls, String queryString) {
         EntityManager em = getEntityManager();

@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public abstract class AbstractSession implements Session {
 
     /**
-     * 用来解决事务嵌套
+     * to solve problem of nested transaction
      */
     protected final Queue<Object> txStack = new ConcurrentLinkedQueue<Object>();
 
@@ -95,14 +95,15 @@ public abstract class AbstractSession implements Session {
     }
 
     /**
-     * 手动绑定到当前线程的session
+     * manually bind session to current thread
      */
     private static final ThreadLocal<WeakReference<Session>> defaultThreadLocalSessions = new ThreadLocal<WeakReference<Session>>();
 
     /**
-     * 优先检查是否有直接手动绑定到当前线程的session,没有就用EntitySessionFactory中的currentSession,并将结果作为手动绑定的session
+     * check whether session binded to current thread first, if not, use EntitySessionFactory.currentSession(),
+     * and set result to binded session of current thread
      *
-     * @return
+     * @return current session of current thread
      */
     public static Session currentSession() {
         WeakReference<Session> defaultSession = defaultThreadLocalSessions.get();

@@ -22,26 +22,22 @@ import java.util.Map;
  * rearranging the SQL statement or adding a parameter doesn't involve
  * renumbering your indices.
  * Code such as this:
- * <p/>
- * <PRE>
+ * *
  * Connection con=getConnection();
  * String query="select * from my_table where name=? or address=?";
  * PreparedStatement p=con.prepareStatement(query);
  * p.setString(1, "bob");
  * p.setString(2, "123 terrace ct");
  * ResultSet rs=p.executeQuery();
- * </PRE>
- * <p/>
+ * *
  * can be replaced with:
- * <p/>
- * <PRE>
+ * *
  * Connection con=getConnection();
  * String query="select * from my_table where name=:name or address=:address";
  * NamedParameterStatement p=new NamedParameterStatement(con, query);
  * p.setString("name", "bob");
  * p.setString("address", "123 terrace ct");
  * ResultSet rs=p.executeQuery();
- * </PRE>
  */
 public class NamedParameterStatement {
     /**
@@ -339,7 +335,7 @@ public class NamedParameterStatement {
 
     /**
      * Executes all of the batched statements.
-     * <p/>
+     * *
      * See {@link Statement#executeBatch()} for details.
      *
      * @return update counts for each statement

@@ -30,12 +30,12 @@ public interface Session {
     public void close();
 
     /**
-     * 关闭整个EntityManagerFactory不能再使用它来创建EntityManager了
+     * close all session factory so you can't use it to create session again
      */
     public void shutdown();
 
     /**
-     * 获取事务嵌套层数
+     * @return transaction nested depth
      */
     public int getTransactionNestedLevel();
 
@@ -58,13 +58,6 @@ public interface Session {
 
     public void delete(Object entity);
 
-    /**
-     * 删除满足条件的model的记录
-     *
-     * @param model
-     * @param expr
-     * @return
-     */
     public int delete(Class<?> model, Expr expr);
 
     public void flush();
@@ -79,9 +72,6 @@ public interface Session {
 
     public Object findSingleByQuery(Class<?> cls, String sql);
 
-    /**
-     * 直接执行原生SQL活得结果
-     */
     public List findListByRawQuery(Class<?> cls, String queryString);
 
     public List findListByRawQuery(String queryString);

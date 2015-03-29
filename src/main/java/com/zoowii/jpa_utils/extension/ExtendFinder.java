@@ -1,6 +1,5 @@
 package com.zoowii.jpa_utils.extension;
 
-import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.Finder;
 import com.zoowii.jpa_utils.query.Query;
@@ -9,9 +8,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.List;
 
 /**
- * 这是一个扩展的Finder类，如果用户有需要可以自行再继承来进行扩展
- * 推荐对查询复杂的Model类定义一个单独的Finder类，然后在里面增加各种查询方法
- * 比如对于Model类UserEntity，定义一个UserFinder类，在里面可以加上各种比如findByName等方法，方便使用，并避免过多修改model类本身
+ * this is an extended Finder class, and user can define own Finder class extend from Finder to add features 
+ * I suggest to define a seprate Finder sub class extend from Finder or ExtendFinder, then you can add kinds of query methods
  * Created by zoowii on 14-12-23.
  */
 public class ExtendFinder<K, M> extends Finder<K, M> {
@@ -20,10 +18,10 @@ public class ExtendFinder<K, M> extends Finder<K, M> {
     }
 
     /**
-     * 这是使用简单分页类的例子，如果有需要,可以自行再扩展
+     * simple method of find using simple Paginator class, if you need, you cant extend the Find class 
      *
-     * @param paginator
-     * @return
+     * @param paginator paginator instance to use
+     * @return query result
      */
     public List<M> findByPaginator(Paginator paginator) {
         if (paginator == null) {

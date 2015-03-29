@@ -14,7 +14,7 @@ public class Model {
     /**
      * 默认使用JPA的方式，如果有需要，请在执行DB操作时手动传入session
      *
-     * @return
+     * @return the result session
      */
     public static Session getSession() {
         return AbstractSession.currentSession();
