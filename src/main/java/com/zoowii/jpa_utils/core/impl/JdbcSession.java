@@ -22,9 +22,11 @@ import org.apache.commons.lang3.exception.CloneFailedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 
+import javax.persistence.Query;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -196,6 +198,11 @@ public class JdbcSession extends AbstractSession {
     }
 
     @Override
+    public void detach(Object entity) {
+
+    }
+
+    @Override
     public void refresh(Object entity) {
         ModelMeta modelMeta = getEntityMetaOfClass(entity.getClass());
         FieldAccessor idAccessor = modelMeta.getIdAccessor();
@@ -303,7 +310,7 @@ public class JdbcSession extends AbstractSession {
 
     @Override
     public int executeQuerySql(String sql) {
-        return executeNativeSql(sql);
+        return executeQuerySql(sql, null);
     }
 
     @Override
@@ -405,5 +412,10 @@ public class JdbcSession extends AbstractSession {
             parameterBindings.applyToPrepareStatement(pstm);
         }
         return executePrepareStatementUpdate(pstm);
+    }
+
+    @Override
+    public int executeQuerySql(String sql, ParameterBindings parameterBindings) {
+        return executeNativeSql(sql, parameterBindings);
     }
 }

@@ -7,11 +7,14 @@ import com.zoowii.jpa_utils.core.Transaction;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.ORMSqlMapper;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.util.ListUtil;
+import com.zoowii.jpa_utils.query.ParameterBindings;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zoowii on 14-12-23.
@@ -73,6 +76,11 @@ public class HibernateSession extends AbstractSession {
     }
 
     @Override
+    public void detach(Object entity) {
+        hibernateSession.evict(entity);
+    }
+
+    @Override
     public void refresh(Object entity) {
         hibernateSession.refresh(entity);
     }
@@ -99,7 +107,28 @@ public class HibernateSession extends AbstractSession {
 
     @Override
     public int executeQuerySql(String sql) {
-        return hibernateSession.createQuery(sql).executeUpdate();
+        return executeQuerySql(sql, null);
+    }
+
+    @Override
+    public int executeQuerySql(String sql, ParameterBindings parameterBindings) {
+        Query query = hibernateSession.createQuery(sql);
+        if(parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size();++i) {
+                query.setParameter(i, indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for(String key : namedBindings.keySet()) {
+                Object value = namedBindings.get(key);
+                if(value instanceof Collection) {
+                    query.setParameterList(key, (Collection<?>)value);
+                } else {
+                    query.setParameter(key, value);
+                }
+            }
+        }
+        return query.executeUpdate();
     }
 
     @Override

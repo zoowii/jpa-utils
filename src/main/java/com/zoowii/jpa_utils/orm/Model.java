@@ -20,11 +20,11 @@ public class Model {
         return AbstractSession.currentSession();
     }
 
-    public void beforeSave() {
+    public void beforeSave(Session session) {
 
     }
 
-    public void afterSave() {
+    public void afterSave(Session session) {
 
     }
 
@@ -33,16 +33,16 @@ public class Model {
     }
 
     public void save(Session session) {
-        beforeSave();
+        beforeSave(session);
         session.save(this);
-        afterSave();
+        afterSave(session);
     }
 
-    public void beforeUpdate() {
+    public void beforeUpdate(Session session) {
 
     }
 
-    public void afterUpdate() {
+    public void afterUpdate(Session session) {
 
     }
 
@@ -51,16 +51,16 @@ public class Model {
     }
 
     public void update(Session session) {
-        beforeUpdate();
+        beforeUpdate(session);
         session.update(this);
-        afterUpdate();
+        afterUpdate(session);
     }
 
-    public void beforeDelete() {
+    public void beforeDelete(Session session) {
 
     }
 
-    public void afterDelete() {
+    public void afterDelete(Session session) {
 
     }
 
@@ -69,16 +69,16 @@ public class Model {
     }
 
     public void delete(Session session) {
-        beforeDelete();
+        beforeDelete(session);
         session.delete(this);
-        afterDelete();
+        afterDelete(session);
     }
 
-    public void beforeRefresh() {
+    public void beforeRefresh(Session session) {
 
     }
 
-    public void afterRefresh() {
+    public void afterRefresh(Session session) {
 
     }
 
@@ -87,16 +87,16 @@ public class Model {
     }
 
     public void refresh(Session session) {
-        beforeRefresh();
+        beforeRefresh(session);
         session.refresh(this);
-        afterRefresh();
+        afterRefresh(session);
     }
 
-    public void beforeMerge() {
+    public void beforeMerge(Session session) {
 
     }
 
-    public void afterMerge() {
+    public void afterMerge(Session session) {
 
     }
 
@@ -105,8 +105,19 @@ public class Model {
     }
 
     public void merge(Session session) {
-        beforeMerge();
+        beforeMerge(session);
         session.merge(this);
-        afterMerge();
+        afterMerge(session);
+    }
+    public void beforeDetach(Session session) {
+
+    }
+    public void afterDetach(Session session) {
+
+    }
+    public void detach(Session session) {
+        beforeDetach(session);
+        session.detach(this);
+        afterDetach(session);
     }
 }

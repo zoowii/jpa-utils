@@ -3,6 +3,7 @@ package com.zoowii.jpa_utils.core;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.query.Expr;
+import com.zoowii.jpa_utils.query.ParameterBindings;
 
 import java.util.List;
 
@@ -11,47 +12,49 @@ import java.util.List;
  */
 public interface Session {
 
-    public SqlMapper getSqlMapper();
+    SqlMapper getSqlMapper();
 
-    public ModelMeta getEntityMetaOfClass(Class<?> entityCls);
+    ModelMeta getEntityMetaOfClass(Class<?> entityCls);
 
-    public Transaction getTransaction();
+    Transaction getTransaction();
 
-    public void begin();
+    void begin();
 
-    public void commit();
+    void commit();
 
-    public boolean isOpen();
+    boolean isOpen();
 
-    public void rollback();
+    void rollback();
 
-    public boolean isClosed();
+    boolean isClosed();
 
-    public void close();
+    void close();
 
     /**
      * 关闭整个EntityManagerFactory不能再使用它来创建EntityManager了
      */
-    public void shutdown();
+    void shutdown();
 
     /**
      * 获取事务嵌套层数
      */
-    public int getTransactionNestedLevel();
+    int getTransactionNestedLevel();
 
-    public boolean isTransactionActive();
+    boolean isTransactionActive();
 
-    public void save(Object entity);
+    void save(Object entity);
 
-    public void update(Object entity);
+    void update(Object entity);
 
-    public void merge(Object entity);
+    void merge(Object entity);
 
-    public void refresh(Object entity);
+    void detach(Object entity);
 
-    public Object find(Class<?> cls, Object id);
+    void refresh(Object entity);
 
-    public void delete(Object entity);
+    Object find(Class<?> cls, Object id);
+
+    void delete(Object entity);
 
     /**
      * 删除满足条件的model的记录
@@ -60,38 +63,40 @@ public interface Session {
      * @param expr
      * @return
      */
-    public int delete(Class<?> model, Expr expr);
+    int delete(Class<?> model, Expr expr);
 
-    public void flush();
+    void flush();
 
-    public int executeNativeSql(String sql);
+    int executeNativeSql(String sql);
 
-    public int executeQuerySql(String sql);
+    int executeQuerySql(String sql);
 
-    public List findListByQuery(Class<?> cls, String queryString);
+    int executeQuerySql(String sql, ParameterBindings parameterBindings);
 
-    public Object findFirstByQuery(Class<?> cls, String queryString);
+    List findListByQuery(Class<?> cls, String queryString);
 
-    public Object findSingleByQuery(Class<?> cls, String sql);
+    Object findFirstByQuery(Class<?> cls, String queryString);
+
+    Object findSingleByQuery(Class<?> cls, String sql);
 
     /**
      * 直接执行原生SQL活得结果
      */
-    public List findListByRawQuery(Class<?> cls, String queryString);
+    List findListByRawQuery(Class<?> cls, String queryString);
 
-    public List findListByRawQuery(String queryString);
+    List findListByRawQuery(String queryString);
 
-    public Object findFirstByRawQuery(Class<?> cls, String queryString);
+    Object findFirstByRawQuery(Class<?> cls, String queryString);
 
-    public Object findFirstByRawQuery(String queryString);
+    Object findFirstByRawQuery(String queryString);
 
-    public Object findSingleByNativeSql(Class<?> cls, String sql);
+    Object findSingleByNativeSql(Class<?> cls, String sql);
 
-    public Object findSingleByNativeSql(String sql);
+    Object findSingleByNativeSql(String sql);
 
-    public IWrappedQuery createQuery(Class<?> cls, String queryString);
+    IWrappedQuery createQuery(Class<?> cls, String queryString);
 
-    public IWrappedQuery createQuery(String queryString);
+    IWrappedQuery createQuery(String queryString);
 
-    public Session asThreadLocal();
+    Session asThreadLocal();
 }
