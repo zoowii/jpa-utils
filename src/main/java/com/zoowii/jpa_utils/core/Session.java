@@ -31,12 +31,12 @@ public interface Session {
     void close();
 
     /**
-     * 关闭整个EntityManagerFactory不能再使用它来创建EntityManager了
+     * close all session factory so you can't use it to create session again
      */
     void shutdown();
 
     /**
-     * 获取事务嵌套层数
+     * @return transaction nested depth
      */
     int getTransactionNestedLevel();
 
@@ -51,6 +51,10 @@ public interface Session {
     void detach(Object entity);
 
     void refresh(Object entity);
+    /**
+     * clear cache
+     */
+    void clear();
 
     Object find(Class<?> cls, Object id);
 

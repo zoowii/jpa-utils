@@ -9,8 +9,8 @@ public class ModelUtils {
     /**
      * 从model类中找到对应的数据库表名
      *
-     * @param cls
-     * @return
+     * @param cls cls to find
+     * @return table name found
      */
     public static String getTableNameFromModelClass(Class<?> cls) {
         if (cls == null) {

@@ -5,6 +5,7 @@ import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.SqlStatementInfo;
+import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.util.FieldAccessor;
 import com.zoowii.jpa_utils.util.IncrementCircleNumber;
@@ -17,8 +18,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * TODO: 使用NamedPrepareStatement
- * 用来映射JAVA orm model的列类型到SQL数据库中的字段类型
+ * map java orm model's property types to sql column types
  * Created by zoowii on 15/1/26.
  */
 public abstract class SqlMapper {
@@ -83,20 +83,20 @@ public abstract class SqlMapper {
     }
 
     /**
-     * 为了避免字段名和数据库SQL关键字冲突,wrap一下,比如在mysql中用`columnName`来wrap
+     *  wrap the column name to avoid distinct with sql key words, eg. `columnName` in MySQL
      *
-     * @param columnName
-     * @return
+     * @param columnName column name to wrap
+     * @return wrapped column name in sql
      */
     public String getSqlColumnNameWrapped(String columnName) {
         return columnName;
     }
 
     /**
-     * 为了避免表名和数据库SQL关键字冲突,wrap一下,比如在mysql中用`tableName`来wrap
+     * wrap the table name to avoid distinct with sql key words, eg. `tableName` in MySQL
      *
-     * @param tableName
-     * @return
+     * @param tableName table name
+     * @return wrapped table name
      */
     public String getSqlTableNameWrapped(String tableName) {
         return tableName;
@@ -209,9 +209,22 @@ public abstract class SqlMapper {
             return String.format(" (%s %s :%s)", left, op, key);
         }
         String columnName = columnMeta.columnName;
+        String finalTable = tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName);
+        if(Expr.IN.equals(op)) {
+            if(value instanceof List) {
+                List<Object> valueList = (List<Object>) value;
+                for(int i=0;i<valueList.size();++i) {
+                    if(valueList.get(i) instanceof String) {
+                        valueList.set(i, String.format("'%s'", valueList.get(i)));
+                    }
+                }
+                value = StringUtil.join((List<?>) value, ", ");
+            }
+            return String.format(" (%s %s (%s)) ", finalTable, op, value);
+        }
         String key = left.toString() + incrementCircleNumber.getAndIncrement();
         parameterBindings.addBinding(key, value);
-        return String.format(" (%s %s :%s) ", tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName), op, key);
+        return String.format(" (%s %s :%s) ", finalTable, op, key);
     }
 
     public String getEqConditionSubSql(ModelMeta modelMeta, Object fieldName, Object value, ParameterBindings parameterBindings, String tableAlias) {
@@ -236,12 +249,12 @@ public abstract class SqlMapper {
     }
 
     /**
-     * 在HQL或者preparestatement的SQL中创建一个类似':abc', '?'的占位符,并修改ParameterBindings
+     * create a placeholder like ':abc', '?' in sql of HQL or preparestatement
      *
-     * @param parameterBindings
-     * @param key
-     * @param value
-     * @return pair of {left: varName,比如abc, right: 占位符,比如:abc}
+     * @param parameterBindings parameter bindings
+     * @param key parameter key
+     * @param value parameter value
+     * @return pair of {left: varName,比如abc, right: placeholder,eg. abc}
      */
     public Pair<String, String> getNewParameterVar(ParameterBindings parameterBindings, String key, Object value) {
         String var = String.format("%s_%s", key, incrementCircleNumber.getAndIncrement() + "");
@@ -250,11 +263,11 @@ public abstract class SqlMapper {
     }
 
     /**
-     * 生成的中间查询可能是没有select子句的,比如HQL语句中的
+     * the generated query may now not contains select sub query, eg. in HQL.
      *
-     * @param modelMeta
-     * @param sql
-     * @return
+     * @param modelMeta model meta info
+     * @param sql sql to wrap
+     * @return wrapped query string
      */
     public String wrapQueryWithDefaultSelect(ModelMeta modelMeta, String sql) {
         if (sql.trim().toUpperCase().startsWith("FROM".toUpperCase())) {

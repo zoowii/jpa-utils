@@ -46,6 +46,7 @@ public class Query<M> {
 
     /**
      * @param tableName maybe `User` or `User user`(then you can use user.name='abc' in expr)
+     * @param session which session the query use
      */
     public Query(String tableName, Session session) {
         this.tableName = tableName;
@@ -101,6 +102,11 @@ public class Query<M> {
 
     public Query<M> eq(String name, Object value) {
         this.condition = this.condition.eq(name, value);
+        return this;
+    }
+    
+    public Query<M> in(String property, Object value) {
+        this.condition = this.condition.in(property, value);
         return this;
     }
 
@@ -209,7 +215,7 @@ public class Query<M> {
     }
 
     public long count(Session session, Class<?> model) {
-        // 不能直接getSingleResult,因为在分布式mysql集群中,count语句可能返回多个值
+        // can't use getSingleResult simply, because in distributed mysql cluster, count sql may return multi rows
         List result = getTypedQuery(session, Long.class, new Function<String, String>() {
             @Override
             public String apply(String s) {
@@ -258,8 +264,10 @@ public class Query<M> {
     }
 
     /**
-     * @param model        要查询的model
-     * @param queryWrapper 用来对HQL进行二次处理,处理后再用来执行
+     * @param session use which session
+     * @param model        to model to query
+     * @param queryWrapper post-processor to process HQL string, before execute the HQL
+     * @return typed query
      */
     public IWrappedQuery getTypedQuery(Session session, Class<?> model, Function<String, String> queryWrapper) {
         QueryInfo query = this.toQuery();

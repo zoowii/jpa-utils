@@ -1,5 +1,6 @@
 package com.zoowii.jpa_utils.test;
 
+import com.google.common.base.Function;
 import com.zoowii.jpa_utils.core.impl.EntitySession;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.core.impl.JdbcSession;
@@ -8,12 +9,14 @@ import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.test.models.Employee;
 import com.zoowii.jpa_utils.query.Query;
 import com.zoowii.jpa_utils.test.models.User;
+import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.StringUtil;
 import junit.framework.TestCase;
 import org.apache.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -86,6 +89,16 @@ public class DaoTest extends TestCase {
                 LOG.info(users1.size() + "");
                 List<User> usersOfLimitAndOffset = User.find.where(session).limit(3).offset(2).all();
                 assertTrue(usersOfLimitAndOffset.size() <= 3);
+                List<String> idsForInQuery = ListUtil.map(usersOfLimitAndOffset, new Function<User, String>() {
+                    @Override
+                    public String apply(User user) {
+                        return user.getId();
+                    }
+                });
+                List<User> usersFromIn = User.find.where(session).in("id", idsForInQuery).all();
+                assertTrue(usersFromIn.size() > 0);
+                List<User> usersFromInSubQuery = User.find.where(session).in("id", "select id from jpa_user limit 4").all();
+                assertEquals(usersFromInSubQuery.size(), 4);
             } catch (Exception e) {
                 e.printStackTrace();
                 session.rollback();
@@ -109,6 +122,8 @@ public class DaoTest extends TestCase {
                 employee.save(session);
                 LOG.info("new employee " + employee.getId());
             }
+            List<Employee> employeesFromInQuery = Employee.find.where(session).in("id", "select id from Employee").all();
+            assertTrue(employeesFromInQuery.size() > 0);
             session.commit();
         } catch (Exception e) {
             e.printStackTrace();

@@ -14,7 +14,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * orm model类的元信息
+ * meta info of orm model
  * Created by zoowii on 15/1/26.
  */
 public class ModelMeta {
@@ -27,7 +27,7 @@ public class ModelMeta {
     private SqlMapper sqlMapper;
 
     /**
-     * orm model类的列信息(映射到字段),胡烈所有@Transient注解了的字段
+     * column info of orm model class, ignore all fields with @javax.sql.Transient
      */
     public static class ModelColumnMeta {
         public boolean isId = false;
@@ -64,7 +64,7 @@ public class ModelMeta {
                     columnMeta.columnName = columnAnno.name();
                 }
             }
-            // 根据columnType或者@Column和@Lob注解得到SQL字段类型
+            // get sql column type from columnType or @Column or @Lob annotation
             boolean isLob = field.getAnnotation(javax.persistence.Lob.class) != null;
             try {
                 columnMeta.columnType = sqlMapper.get(field.getType(), columnAnno, isLob);
@@ -79,7 +79,7 @@ public class ModelMeta {
 
     public ModelMeta(Class<?> modelCls, SqlMapper sqlMapper) {
         this.sqlMapper = sqlMapper;
-        // 获取orm model的元信息
+        // get meta info of orm model
         this.modelCls = modelCls;
         javax.persistence.Table table = modelCls.getAnnotation(javax.persistence.Table.class);
         tableName = StringUtil.underscoreName(modelCls.getSimpleName());

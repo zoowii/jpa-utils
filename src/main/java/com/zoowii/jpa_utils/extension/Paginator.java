@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 非常简单的分页类，当要求不高时可以考虑使用
+ * very simple paginator class, and you can use it if it's enought
  * Created by zoowii on 14-12-23.
  */
 public class Paginator {
@@ -37,31 +37,31 @@ public class Paginator {
     /**
      * ==
      *
-     * @param name
-     * @param value
-     * @return
+     * @param name property name
+     * @param value eq to value
+     * @return result instance
      */
     public Paginator eq(String name, Object value) {
         return addExpression(Expr.createEQ(name, value));
     }
 
     /**
-     * >
+     * great than
      *
-     * @param name
-     * @param value
-     * @return
+     * @param name property name
+     * @param value gt to value
+     * @return result instance
      */
     public Paginator gt(String name, Object value) {
         return addExpression(Expr.createGT(name, value));
     }
 
     /**
-     * <
+     * less than
      *
-     * @param name
-     * @param value
-     * @return
+     * @param name property name
+     * @param value lt to value
+     * @return result instance
      */
     public Paginator lt(String name, Object value) {
         return addExpression(Expr.createLT(name, value));
@@ -70,31 +70,31 @@ public class Paginator {
     /**
      * !=
      *
-     * @param name
-     * @param value
-     * @return
+     * @param name property name
+     * @param value ne to value
+     * @return result instance
      */
     public Paginator ne(String name, Object value) {
         return addExpression(Expr.createNE(name, value));
     }
 
     /**
-     * >=
+     * great than or equal
      *
-     * @param name
-     * @param value
-     * @return
+     * @param name property name
+     * @param value gt to value
+     * @return result instance
      */
     public Paginator ge(String name, Object value) {
         return addExpression(Expr.createGE(name, value));
     }
 
     /**
-     * <=
+     * less than or equal
      *
-     * @param name
-     * @param value
-     * @return
+     * @param name property name
+     * @param value le to value
+     * @return result instance
      */
     public Paginator le(String name, Object value) {
         return addExpression(Expr.createLE(name, value));

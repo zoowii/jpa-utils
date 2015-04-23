@@ -2,8 +2,12 @@ package com.zoowii.jpa_utils.jdbcorm.sqlmapper;
 
 import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
+import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
+import com.zoowii.jpa_utils.util.StringUtil;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.List;
 
 /**
  * Created by zoowii on 15/1/29.
@@ -90,6 +94,18 @@ public class ORMSqlMapper extends SqlMapper {
 
     @Override
     public String getOpConditionSubSql(String op, ModelMeta modelMeta, Object fieldName, Object value, ParameterBindings parameterBindings, String tableAlias) {
+        if(Expr.IN.equals(op)) {
+            if(value instanceof List) {
+                List<Object> valueList = (List<Object>) value;
+                for(int i=0;i<valueList.size();++i) {
+                    if(valueList.get(i) instanceof String) {
+                        valueList.set(i, String.format("'%s'", valueList.get(i)));
+                    }
+                }
+                value = StringUtil.join((List<?>) value, ", ");
+            }
+            return String.format(" (%s %s (%s)) ", fieldName, op, value);
+        }
         parameterBindings.addIndexBinding(value);
         return String.format(" (%s %s ?) ", fieldName, op);
     }

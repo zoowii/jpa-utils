@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TODO: 这个类要改成immutable的,因为可能有设置了某个parameter-binding但是最后没有用到全部的情况
+ * TODO:  change this class to immutable
  */
 public class ParameterBindings {
     private List<Object> indexBindings = new ArrayList<Object>();
