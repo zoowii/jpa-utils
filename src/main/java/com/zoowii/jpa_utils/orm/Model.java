@@ -115,6 +115,9 @@ public class Model {
     public void afterDetach(Session session) {
 
     }
+    public void detach() {
+        detach(getSession());
+    }
     public void detach(Session session) {
         beforeDetach(session);
         session.detach(this);
