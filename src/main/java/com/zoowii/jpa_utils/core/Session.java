@@ -12,6 +12,8 @@ import java.util.List;
  */
 public interface Session {
 
+    int getIndexParamBaseOrdinal();
+
     SqlMapper getSqlMapper();
 
     ModelMeta getEntityMetaOfClass(Class<?> entityCls);

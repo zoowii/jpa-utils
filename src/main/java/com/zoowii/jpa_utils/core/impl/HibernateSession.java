@@ -24,6 +24,11 @@ public class HibernateSession extends AbstractSession {
     protected final org.hibernate.Session hibernateSession;
     protected SqlMapper sqlMapper = new ORMSqlMapper();
 
+    @Override
+    public int getIndexParamBaseOrdinal() {
+        return 0;
+    }
+
     public HibernateSession(HibernateSessionFactory sessionFactory) {
         hibernateSessionFactory = sessionFactory;
         hibernateSession = hibernateSessionFactory.getHibernateOriginSessionFactory().openSession();

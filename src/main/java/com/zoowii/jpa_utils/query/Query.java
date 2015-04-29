@@ -289,7 +289,7 @@ public class Query<M> {
         }
         if (bindings != null) {
             for (int i = 0; i < bindings.getIndexBindings().size(); ++i) {
-                typedQuery = typedQuery.setParameter(i + 1, bindings.getIndexBindings().get(i));
+                typedQuery = typedQuery.setParameter(i + session.getIndexParamBaseOrdinal(), bindings.getIndexBindings().get(i));
             }
             for (String key : bindings.getMapBindings().keySet()) {
                 typedQuery = typedQuery.setParameter(key, bindings.getMapBindings().get(key));

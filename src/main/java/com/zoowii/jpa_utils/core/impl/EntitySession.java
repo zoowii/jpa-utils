@@ -143,7 +143,7 @@ public class EntitySession extends AbstractSession {
         if(parameterBindings != null) {
             List<Object> indexedBindings = parameterBindings.getIndexBindings();
             for (int i = 0; i < indexedBindings.size();++i) {
-                query.setParameter(i, indexedBindings.get(i));
+                query.setParameter(i+1, indexedBindings.get(i));
             }
             Map<String, Object> namedBindings = parameterBindings.getMapBindings();
             for(String key : namedBindings.keySet()) {

@@ -23,6 +23,11 @@ public abstract class AbstractSession implements Session {
     protected final Queue<Object> txStack = new ConcurrentLinkedQueue<Object>();
 
     @Override
+    public int getIndexParamBaseOrdinal() {
+        return 1;
+    }
+
+    @Override
     public void begin() {
         txStack.add(1);
         if (getTransactionNestedLevel() > 1) {
