@@ -135,7 +135,8 @@ public class FieldAccessor {
      */
     private String getGetMethodName() {
         assert name != null;
-        if (field != null && field.getType() == Boolean.class) {
+        if (field != null && (field.getType() == Boolean.class
+                    || "boolean".equals(field.getType().getName()))) {
             return "is" + upperFirstChar(name);
         }
         return "get" + upperFirstChar(name);

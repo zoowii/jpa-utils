@@ -28,6 +28,10 @@ public abstract class SqlMapper {
 
     public abstract String getOfLong();
 
+    public abstract String getOfFloat();
+
+    public abstract String getOfDouble();
+
     public abstract String getOfString();
 
     public abstract String getOfBoolean();
@@ -48,11 +52,21 @@ public abstract class SqlMapper {
         if (columnAnno != null && !StringUtil.isEmpty(columnAnno.columnDefinition())) {
             return columnAnno.columnDefinition();
         }
-        if (propertyCls == Integer.class) {
+        if (propertyCls == Integer.class
+                || "int".equals(propertyCls.getName())) {
             return getOfInteger();
         }
-        if (propertyCls == Long.class) {
+        if (propertyCls == Long.class
+                || "long".equals(propertyCls.getName())) {
             return getOfLong();
+        }
+        if(propertyCls == Float.class
+                || "float".equals(propertyCls.getName())) {
+            return getOfFloat();
+        }
+        if(propertyCls == Double.class
+                || "double".equals(propertyCls.getName())) {
+            return getOfDouble();
         }
         if (propertyCls == String.class) {
             if (isLob) {
@@ -64,7 +78,8 @@ public abstract class SqlMapper {
                 return getOfString();
             }
         }
-        if (propertyCls == Boolean.class) {
+        if (propertyCls == Boolean.class
+                || "boolean".equals(propertyCls.toString())) {
             return getOfBoolean();
         }
         if (propertyCls == Date.class || propertyCls == java.sql.Time.class) {
@@ -73,7 +88,8 @@ public abstract class SqlMapper {
         if (propertyCls == java.sql.Date.class) {
             return getOfDate();
         }
-        if (propertyCls == java.sql.Timestamp.class) {
+        if (propertyCls == java.sql.Timestamp.class
+                || propertyCls == java.sql.Time.class) {
             return getOfTimestamp();
         }
         if (propertyCls.isArray() && (propertyCls.getComponentType() == Byte.class || propertyCls.getComponentType().getName().equals("byte"))) {

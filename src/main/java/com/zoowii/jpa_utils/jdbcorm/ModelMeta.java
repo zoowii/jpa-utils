@@ -5,7 +5,8 @@ import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.util.FieldAccessor;
 import com.zoowii.jpa_utils.util.StringUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.Transient;
 import java.lang.reflect.Field;
@@ -16,7 +17,7 @@ import java.util.*;
  * Created by zoowii on 15/1/26.
  */
 public class ModelMeta {
-    private static final Logger LOG = Logger.getLogger(ModelMeta.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ModelMeta.class);
     private Class<?> modelCls;
     private String tableName;
     private String tableSchema;
@@ -40,13 +41,13 @@ public class ModelMeta {
         Field[] fields = modelCls.getDeclaredFields();
         Set<ModelColumnMeta> columnMetas = new HashSet<ModelColumnMeta>();
         for (Field field : fields) {
-            if (field.getAnnotation(Transient.class) != null) {
+            FieldAccessor fieldAccessor = new FieldAccessor(modelCls, field.getName());
+            if (fieldAccessor.getPropertyAnnotation(Transient.class) != null) {
                 continue;
             }
             ModelColumnMeta columnMeta = new ModelColumnMeta();
             columnMeta.fieldName = field.getName();
             columnMeta.fieldType = field.getType();
-            FieldAccessor fieldAccessor = new FieldAccessor(modelCls, field.getName());
             if (fieldAccessor.getPropertyAnnotation(javax.persistence.Id.class) != null) {
                 columnMeta.isId = true;
                 this.idColumnMeta = columnMeta;
@@ -68,7 +69,7 @@ public class ModelMeta {
             try {
                 columnMeta.columnType = sqlMapper.get(field.getType(), columnAnno, isLob);
             } catch (JdbcRuntimeException e) {
-                LOG.debug(e);
+                LOG.debug("get sql model field type error", e);
                 continue;
             }
             columnMetas.add(columnMeta);

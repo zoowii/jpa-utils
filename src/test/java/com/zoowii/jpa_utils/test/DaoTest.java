@@ -13,7 +13,8 @@ import com.zoowii.jpa_utils.test.models.User;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.StringUtil;
 import junit.framework.TestCase;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,7 +24,7 @@ import java.util.Random;
 import java.util.UUID;
 
 public class DaoTest extends TestCase {
-    private static final Logger LOG = Logger.getLogger(DaoTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DaoTest.class);
 
     private Connection getJdbcTestConnection() {
         try {
@@ -34,7 +35,7 @@ public class DaoTest extends TestCase {
 //            return DriverManager.getConnection(jdbcUrl, "root", "");
             return DriverManager.getConnection(jdbcUrl);
         } catch (Exception e) {
-            LOG.error(e);
+            LOG.error("get jdbc conn error", e);
             throw new RuntimeException(e);
         }
     }
@@ -116,8 +117,7 @@ public class DaoTest extends TestCase {
                 session.close();
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            LOG.error(e);
+            LOG.error("test jdbc error", e);
         }
     }
 

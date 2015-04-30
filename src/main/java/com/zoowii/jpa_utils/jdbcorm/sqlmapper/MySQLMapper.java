@@ -34,6 +34,16 @@ public class MySQLMapper extends SqlMapper {
     }
 
     @Override
+    public String getOfFloat() {
+        return "float";
+    }
+
+    @Override
+    public String getOfDouble() {
+        return "double";
+    }
+
+    @Override
     public String getOfString() {
         return "varchar(255)";
     }

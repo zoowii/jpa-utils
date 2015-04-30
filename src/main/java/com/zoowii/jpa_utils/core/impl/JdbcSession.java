@@ -18,7 +18,8 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.exception.CloneFailedException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
@@ -30,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by zoowii on 15/1/26.
  */
 public class JdbcSession extends AbstractSession {
-    private static final Logger LOG = Logger.getLogger(JdbcSession.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcSession.class);
 
     private java.sql.Connection jdbcConnection;
     private JdbcSessionFactory jdbcSessionFactory;
