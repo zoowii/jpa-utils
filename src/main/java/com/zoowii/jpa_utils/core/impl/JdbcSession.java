@@ -442,4 +442,11 @@ public class JdbcSession extends AbstractSession {
     public int executeQuerySql(String sql, ParameterBindings parameterBindings) {
         return executeNativeSql(sql, parameterBindings);
     }
+
+    @Override
+    public String columnNameInQuery(Class<?> modelCls, String propertyName) {
+        ModelMeta modelMeta = getEntityMetaOfClass(modelCls);
+        ModelMeta.ModelColumnMeta modelColumnMeta = modelMeta.getColumnMetaByFieldName(propertyName);
+        return modelColumnMeta != null ? modelColumnMeta.columnName : propertyName;
+    }
 }

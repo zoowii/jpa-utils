@@ -115,4 +115,12 @@ public interface Session {
     IWrappedQuery createQuery(String queryString);
 
     Session asThreadLocal();
+
+    /**
+     * when in Query::eq/ne/gt/lt/gte/lte/like/orderBy/etc. the left propertyName/columnName may parsed to what name would be used in current session
+     * eg. in jdbc-session, the property name should be parsed to sql column name automaticly while not in other sessions default.
+     * @param propertyName
+     * @return
+     */
+    String columnNameInQuery(Class<?> modelCls, String propertyName);
 }

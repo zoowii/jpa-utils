@@ -140,4 +140,9 @@ public abstract class AbstractSession implements Session {
     public Session asThreadLocal() {
         return bindCurrentSession(this);
     }
+
+    @Override
+    public String columnNameInQuery(Class<?> modelCls, String propertyName) {
+        return propertyName;
+    }
 }

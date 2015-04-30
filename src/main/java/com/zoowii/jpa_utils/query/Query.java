@@ -29,6 +29,10 @@ public class Query<M> {
     protected Map<String, Object> mapParameters = new HashMap<String, Object>();
     protected Session session;
 
+    public Class<?> getModelClass() {
+        return cls;
+    }
+
     public Session getSession() {
         if (session != null) {
             return session;
@@ -155,7 +159,7 @@ public class Query<M> {
     }
 
     public Query<M> orderBy(String sort, boolean asc) {
-        this.orderBys.add(new OrderBy(sort, asc));
+        this.orderBys.add(new OrderBy(getSession().columnNameInQuery(cls, sort), asc));
         return this;
     }
 

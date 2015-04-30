@@ -135,6 +135,8 @@ public class Expr {
         }
     }
 
+    private static final List<String> NEED_PARSE_LEFT_COLUMN_OPS = ListUtil.seq(EQ,NE, GT, LT, LIKE, GE, LE, IN);
+
     /**
      * parse to Query string and bindings
      * @param sqlMapper sql mapper to use
@@ -143,7 +145,13 @@ public class Expr {
      */
     public QueryInfo toQueryString(SqlMapper sqlMapper, Query query) {
         if (isNullOrNotNullExpr()) {
-            String queryStr = items.get(0) + " " + (op.equals(EQ) ? "is null" : "is not null");
+            Object item1 = items.get(0);
+            if(NEED_PARSE_LEFT_COLUMN_OPS.contains(op)) {
+                if(item1 instanceof String) {
+                    item1 = query.getSession().columnNameInQuery(query.getModelClass(), (String) item1);
+                }
+            }
+            String queryStr = item1 + " " + (op.equals(EQ) ? "is null" : "is not null");
             return new QueryInfo(queryStr, new ParameterBindings());
         }
         ParameterBindings bindings = new ParameterBindings();

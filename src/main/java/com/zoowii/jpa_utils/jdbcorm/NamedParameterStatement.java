@@ -294,7 +294,11 @@ public class NamedParameterStatement {
      * @see PreparedStatement#executeQuery()
      */
     public ResultSet executeQuery() throws SQLException {
-        statement.setFetchSize(1000);
+        if(statement.getMaxRows() >= 1000) {
+            statement.setFetchSize(1000);
+        } else {
+            statement.setFetchSize(statement.getMaxRows());
+        }
         return statement.executeQuery();
     }
 
