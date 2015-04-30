@@ -223,7 +223,13 @@ public class Query<M> {
         List result = getTypedQuery(session, Long.class, new Function<String, String>() {
             @Override
             public String apply(String s) {
-                return "select count(*) " + s;
+                s = s.trim();
+                if(s.toUpperCase().startsWith("FROM")) {
+                    return "SELECT COUNT(1) " + s;
+                } else {
+                    String alias = getTableSymbol() + "_alias_" + StringUtil.randomString(5);
+                    return String.format("SELECT COUNT(1) FROM (%s) %s", s, alias);
+                }
             }
         }).getResultList();
         return (Long) ListUtil.reduce(result, 0L, new Function2() {
