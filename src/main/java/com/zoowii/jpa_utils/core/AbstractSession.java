@@ -7,6 +7,7 @@ import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.query.QueryInfo;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -93,10 +94,16 @@ public abstract class AbstractSession implements Session {
         return getTransaction().isActive();
     }
 
+    private static final Map<Class<?>, ModelMeta> ENTITY_META_CACHE = new HashMap<Class<?>, ModelMeta>();
+
     @Override
-    public ModelMeta getEntityMetaOfClass(Class<?> entityCls) {
-        // TODO: cache
-        return new ModelMeta(entityCls, getSqlMapper());
+    public synchronized ModelMeta getEntityMetaOfClass(Class<?> entityCls) {
+        if(ENTITY_META_CACHE.containsKey(entityCls)) {
+            return ENTITY_META_CACHE.get(entityCls);
+        }
+        ModelMeta modelMeta = new ModelMeta(entityCls, getSqlMapper());
+        ENTITY_META_CACHE.put(entityCls, modelMeta);
+        return modelMeta;
     }
 
     /**

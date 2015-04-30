@@ -95,7 +95,7 @@ public class JdbcQuery implements IWrappedTypedQuery {
     @Override
     public List getResultList() {
         try {
-            ResultSetHandler<List<Object>> handler = JdbcSession.getListResultSetHandler(modelMeta.getModelCls());
+            ResultSetHandler<List<Object>> handler = JdbcSession.getListResultSetHandler(modelMeta);
             ResultSet resultSet = namedParameterStatement.executeQuery();
             try {
                 return handler.handle(resultSet);
@@ -110,7 +110,7 @@ public class JdbcQuery implements IWrappedTypedQuery {
     @Override
     public Object getSingleResult() {
         try {
-            ResultSetHandler<Object> handler = JdbcSession.getRowBeanResultSetHandler(modelMeta.getModelCls());
+            ResultSetHandler<Object> handler = JdbcSession.getRowBeanResultSetHandler(modelMeta);
             ResultSet resultSet = namedParameterStatement.executeQuery();
             try {
                 return handler.handle(resultSet);

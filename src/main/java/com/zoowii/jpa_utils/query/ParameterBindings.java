@@ -17,16 +17,27 @@ public class ParameterBindings {
     private List<Object> indexBindings = new ArrayList<Object>();
     private Map<String, Object> mapBindings = new HashMap<String, Object>();
 
+    public ParameterBindings() {
+    }
+
+    public ParameterBindings(Object... params) {
+        for(Object param : params) {
+            this.addIndexBinding(param);
+        }
+    }
+
     public List<Object> getIndexBindings() {
         return indexBindings;
     }
 
-    public void addIndexBinding(Object value) {
+    public ParameterBindings addIndexBinding(Object value) {
         this.indexBindings.add(value);
+        return this;
     }
 
-    public void addBinding(String key, Object value) {
+    public ParameterBindings addBinding(String key, Object value) {
         this.mapBindings.put(key, value);
+        return this;
     }
 
     public Map<String, Object> getMapBindings() {

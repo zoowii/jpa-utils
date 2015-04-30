@@ -75,11 +75,15 @@ public interface Session {
 
     int executeNativeSql(String sql);
 
+    int executeNativeSql(String sql, ParameterBindings parameterBindings);
+
     int executeQuerySql(String sql);
 
     int executeQuerySql(String sql, ParameterBindings parameterBindings);
 
     List findListByQuery(Class<?> cls, String queryString);
+
+    List findListByQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings);
 
     Object findFirstByQuery(Class<?> cls, String queryString);
 
@@ -90,15 +94,21 @@ public interface Session {
      */
     List findListByRawQuery(Class<?> cls, String queryString);
 
+    List findListByRawQuery(Class<?> cls, String sql, ParameterBindings parameterBindings);
+
     List findListByRawQuery(String queryString);
 
     Object findFirstByRawQuery(Class<?> cls, String queryString);
 
+    Object findFirstByRawQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings);
+
     Object findFirstByRawQuery(String queryString);
 
-    Object findSingleByNativeSql(Class<?> cls, String sql);
+    Object findSingleByRawSql(Class<?> cls, String sql);
 
-    Object findSingleByNativeSql(String sql);
+    Object findSingleByRawSql(Class<?> cls, String sql, ParameterBindings parameterBindings);
+
+    Object findSingleByRawSql(String sql);
 
     IWrappedQuery createQuery(Class<?> cls, String queryString);
 

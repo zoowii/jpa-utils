@@ -6,6 +6,7 @@ import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.core.impl.JdbcSession;
 import com.zoowii.jpa_utils.core.impl.JdbcSessionFactory;
 import com.zoowii.jpa_utils.query.Expr;
+import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.test.models.Employee;
 import com.zoowii.jpa_utils.query.Query;
 import com.zoowii.jpa_utils.test.models.User;
@@ -85,7 +86,7 @@ public class DaoTest extends TestCase {
                     LOG.info(userFound.getName());
                 }
 
-                List<User> users1 = User.find.where(session).gt("age", 50).all();
+                List<User> users1 = User.find.where(session).gt("test_age", 50).all();
                 LOG.info(users1.size() + "");
                 List<User> usersOfLimitAndOffset = User.find.where(session).limit(3).offset(2).all();
                 assertTrue(usersOfLimitAndOffset.size() <= 3);
@@ -98,7 +99,16 @@ public class DaoTest extends TestCase {
                 List<User> usersFromIn = User.find.where(session).in("id", idsForInQuery).all();
                 assertTrue(usersFromIn.size() > 0);
                 List<User> usersFromInSubQuery = User.find.where(session).in("id", "select id from jpa_user limit 4").all();
-                assertEquals(usersFromInSubQuery.size(), 4);
+                assertTrue(usersFromInSubQuery == null || usersFromInSubQuery.size() == 4);
+                List<User> usersFromParamQuery = session.findListByRawQuery(User.class,
+                        "select * from jpa_user where test_age > ?",
+                        new ParameterBindings(50));
+                assertEquals(usersFromParamQuery.size(), users1.size());
+                if(users.size()>0) {
+                    User userFromParamQuery = (User) session.findFirstByRawQuery(User.class,
+                            "select * from jpa_user where id=?", new ParameterBindings(users.get(0).getId()));
+                    assertNotNull(userFromParamQuery);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 session.rollback();

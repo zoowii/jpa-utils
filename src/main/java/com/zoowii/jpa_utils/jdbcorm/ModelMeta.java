@@ -9,9 +9,7 @@ import org.apache.log4j.Logger;
 
 import javax.persistence.Transient;
 import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 /**
  * meta info of orm model
@@ -124,6 +122,23 @@ public class ModelMeta {
             }
         }
         return null;
+    }
+
+    public ModelColumnMeta getColumnMetaBySqlColumnName(String columnName) {
+        for (ModelColumnMeta modelColumnMeta : getColumnMetaSet()) {
+            if (modelColumnMeta.columnName.equalsIgnoreCase(columnName)) {
+                return modelColumnMeta;
+            }
+        }
+        return null;
+    }
+
+    public Map<String, String> getColumnToPropertyOverrides() {
+        Map<String, String> overrides = new HashMap<String, String>();
+        for (ModelColumnMeta modelColumnMeta : getColumnMetaSet()) {
+            overrides.put(modelColumnMeta.columnName.toLowerCase(), modelColumnMeta.fieldName);
+        }
+        return overrides;
     }
 
     public SqlMapper getSqlMapper() {

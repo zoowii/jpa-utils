@@ -111,7 +111,28 @@ public class HibernateSession extends AbstractSession {
 
     @Override
     public int executeNativeSql(String sql) {
-        return hibernateSession.createSQLQuery(sql).executeUpdate();
+        return executeNativeSql(sql, null);
+    }
+
+    @Override
+    public int executeNativeSql(String sql, ParameterBindings parameterBindings) {
+        Query query = hibernateSession.createSQLQuery(sql);
+        if(parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size();++i) {
+                query.setParameter(i + 1, indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for(String key : namedBindings.keySet()) {
+                Object value = namedBindings.get(key);
+                if(value instanceof Collection) {
+                    query.setParameterList(key, (Collection<?>)value);
+                } else {
+                    query.setParameter(key, value);
+                }
+            }
+        }
+        return query.executeUpdate();
     }
 
     @Override
@@ -125,7 +146,7 @@ public class HibernateSession extends AbstractSession {
         if(parameterBindings != null) {
             List<Object> indexedBindings = parameterBindings.getIndexBindings();
             for (int i = 0; i < indexedBindings.size();++i) {
-                query.setParameter(i, indexedBindings.get(i));
+                query.setParameter(i + getIndexParamBaseOrdinal(), indexedBindings.get(i));
             }
             Map<String, Object> namedBindings = parameterBindings.getMapBindings();
             for(String key : namedBindings.keySet()) {
@@ -142,7 +163,28 @@ public class HibernateSession extends AbstractSession {
 
     @Override
     public List findListByQuery(Class<?> cls, String queryString) {
-        return hibernateSession.createQuery(queryString).list();
+        return findListByQuery(cls, queryString, null);
+    }
+
+    @Override
+    public List findListByQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings) {
+        Query query = hibernateSession.createQuery(queryString);
+        if(parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size();++i) {
+                query.setParameter(i + getIndexParamBaseOrdinal(), indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for(String key : namedBindings.keySet()) {
+                Object value = namedBindings.get(key);
+                if(value instanceof Collection) {
+                    query.setParameterList(key, (Collection<?>)value);
+                } else {
+                    query.setParameter(key, value);
+                }
+            }
+        }
+        return query.list();
     }
 
     @Override
@@ -161,8 +203,28 @@ public class HibernateSession extends AbstractSession {
 
     @Override
     public List findListByRawQuery(Class<?> cls, String queryString) {
+        return findListByRawQuery(cls, queryString, null);
+    }
+
+    @Override
+    public List findListByRawQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings) {
         SQLQuery query = hibernateSession.createSQLQuery(queryString);
         query.addEntity(cls);
+        if(parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size();++i) {
+                query.setParameter(i, indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for(String key : namedBindings.keySet()) {
+                Object value = namedBindings.get(key);
+                if(value instanceof Collection) {
+                    query.setParameterList(key, (Collection<?>)value);
+                } else {
+                    query.setParameter(key, value);
+                }
+            }
+        }
         return query.list();
     }
 
@@ -174,6 +236,11 @@ public class HibernateSession extends AbstractSession {
 
     @Override
     public Object findFirstByRawQuery(Class<?> cls, String queryString) {
+        return findFirstByRawQuery(cls, queryString, null);
+    }
+
+    @Override
+    public Object findFirstByRawQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings) {
         SQLQuery query = hibernateSession.createSQLQuery(queryString);
         query.addEntity(cls);
         query.setMaxResults(1);
@@ -188,15 +255,35 @@ public class HibernateSession extends AbstractSession {
     }
 
     @Override
-    public Object findSingleByNativeSql(Class<?> cls, String sql) {
+    public Object findSingleByRawSql(Class<?> cls, String sql) {
+        return findSingleByRawSql(cls, sql, null);
+    }
+
+    @Override
+    public Object findSingleByRawSql(Class<?> cls, String sql, ParameterBindings parameterBindings) {
         SQLQuery query = hibernateSession.createSQLQuery(sql);
+        if(parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size();++i) {
+                query.setParameter(i, indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for(String key : namedBindings.keySet()) {
+                Object value = namedBindings.get(key);
+                if(value instanceof Collection) {
+                    query.setParameterList(key, (Collection<?>)value);
+                } else {
+                    query.setParameter(key, value);
+                }
+            }
+        }
         query.addEntity(cls);
         query.setMaxResults(1);
         return query.uniqueResult();
     }
 
     @Override
-    public Object findSingleByNativeSql(String sql) {
+    public Object findSingleByRawSql(String sql) {
         SQLQuery query = hibernateSession.createSQLQuery(sql);
         query.setMaxResults(1);
         return query.uniqueResult();

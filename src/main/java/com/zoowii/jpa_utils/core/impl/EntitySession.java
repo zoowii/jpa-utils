@@ -111,9 +111,9 @@ public class EntitySession extends AbstractSession {
     public Object find(Class<?> cls, Object id) {
         return getEntityManager().find(cls, id);
     }
-    
+
     @Override
-    public void clear(){
+    public void clear() {
         getEntityManager().clear();
     }
 
@@ -129,7 +129,23 @@ public class EntitySession extends AbstractSession {
 
     @Override
     public int executeNativeSql(String sql) {
-        return getEntityManager().createNativeQuery(sql).executeUpdate();
+        return executeNativeSql(sql, null);
+    }
+
+    @Override
+    public int executeNativeSql(String sql, ParameterBindings parameterBindings) {
+        Query query = getEntityManager().createNativeQuery(sql);
+        if (parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size(); ++i) {
+                query.setParameter(i + 1, indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for (String key : namedBindings.keySet()) {
+                query.setParameter(key, namedBindings.get(key));
+            }
+        }
+        return query.executeUpdate();
     }
 
     @Override
@@ -140,13 +156,13 @@ public class EntitySession extends AbstractSession {
     @Override
     public int executeQuerySql(String sql, ParameterBindings parameterBindings) {
         Query query = getEntityManager().createQuery(sql);
-        if(parameterBindings != null) {
+        if (parameterBindings != null) {
             List<Object> indexedBindings = parameterBindings.getIndexBindings();
-            for (int i = 0; i < indexedBindings.size();++i) {
-                query.setParameter(i+1, indexedBindings.get(i));
+            for (int i = 0; i < indexedBindings.size(); ++i) {
+                query.setParameter(i + 1, indexedBindings.get(i));
             }
             Map<String, Object> namedBindings = parameterBindings.getMapBindings();
-            for(String key : namedBindings.keySet()) {
+            for (String key : namedBindings.keySet()) {
                 query.setParameter(key, namedBindings.get(key));
             }
         }
@@ -155,8 +171,23 @@ public class EntitySession extends AbstractSession {
 
     @Override
     public List findListByQuery(Class<?> cls, String queryString) {
+        return findListByQuery(cls, queryString, null);
+    }
+
+    @Override
+    public List findListByQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings) {
         EntityManager em = getEntityManager();
         TypedQuery query = em.createQuery(queryString, cls);
+        if(parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size(); ++i) {
+                query.setParameter(i + this.getIndexParamBaseOrdinal(), indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for (String key : namedBindings.keySet()) {
+                query.setParameter(key, namedBindings.get(key));
+            }
+        }
         return query.getResultList();
     }
 
@@ -177,8 +208,23 @@ public class EntitySession extends AbstractSession {
 
     @Override
     public List findListByRawQuery(Class<?> cls, String queryString) {
+        return findListByRawQuery(cls, queryString, null);
+    }
+
+    @Override
+    public List findListByRawQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings) {
         EntityManager em = getEntityManager();
         javax.persistence.Query query = em.createNativeQuery(queryString, cls);
+        if (parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size(); ++i) {
+                query.setParameter(i + 1, indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for (String key : namedBindings.keySet()) {
+                query.setParameter(key, namedBindings.get(key));
+            }
+        }
         return query.getResultList();
     }
 
@@ -191,8 +237,23 @@ public class EntitySession extends AbstractSession {
 
     @Override
     public Object findFirstByRawQuery(Class<?> cls, String queryString) {
+        return findFirstByRawQuery(cls, queryString, null);
+    }
+
+    @Override
+    public Object findFirstByRawQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings) {
         EntityManager em = getEntityManager();
         javax.persistence.Query query = em.createNativeQuery(queryString, cls);
+        if (parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size(); ++i) {
+                query.setParameter(i + 1, indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for (String key : namedBindings.keySet()) {
+                query.setParameter(key, namedBindings.get(key));
+            }
+        }
         query.setMaxResults(1);
         return ListUtil.first(query.getResultList());
     }
@@ -206,14 +267,29 @@ public class EntitySession extends AbstractSession {
     }
 
     @Override
-    public Object findSingleByNativeSql(Class<?> cls, String sql) {
+    public Object findSingleByRawSql(Class<?> cls, String sql) {
+        return findSingleByRawSql(cls, sql, null);
+    }
+
+    @Override
+    public Object findSingleByRawSql(Class<?> cls, String sql, ParameterBindings parameterBindings) {
         Query query = getEntityManager().createNativeQuery(sql, cls);
+        if (parameterBindings != null) {
+            List<Object> indexedBindings = parameterBindings.getIndexBindings();
+            for (int i = 0; i < indexedBindings.size(); ++i) {
+                query.setParameter(i + 1, indexedBindings.get(i));
+            }
+            Map<String, Object> namedBindings = parameterBindings.getMapBindings();
+            for (String key : namedBindings.keySet()) {
+                query.setParameter(key, namedBindings.get(key));
+            }
+        }
         query.setMaxResults(1);
         return query.getSingleResult();
     }
 
     @Override
-    public Object findSingleByNativeSql(String sql) {
+    public Object findSingleByRawSql(String sql) {
         Query query = getEntityManager().createNativeQuery(sql);
         query.setMaxResults(1);
         return query.getSingleResult();

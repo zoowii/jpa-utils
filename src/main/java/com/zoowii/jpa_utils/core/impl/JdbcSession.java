@@ -15,18 +15,14 @@ import com.zoowii.jpa_utils.util.FieldAccessor;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.dbutils.handlers.BeanHandler;
-import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.exception.CloneFailedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 
-import javax.persistence.Query;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -224,12 +220,12 @@ public class JdbcSession extends AbstractSession {
         }
     }
 
-    public static ResultSetHandler<List<Object>> getListResultSetHandler(Class<?> cls) {
-        return new BeanListHandler(cls); // TODO: use modelMeta to define row processor
+    public static ResultSetHandler<List<Object>> getListResultSetHandler(ModelMeta modelMeta) {
+        return new JdbcOrmBeanListHandler(modelMeta.getModelCls(), modelMeta);
     }
 
-    public static ResultSetHandler<Object> getRowBeanResultSetHandler(Class<?> cls) {
-        return new BeanHandler(cls); // TODO: use modelMeta to define row processor
+    public static ResultSetHandler<Object> getRowBeanResultSetHandler(ModelMeta modelMeta) {
+        return new JdbcOrmBeanHandler(modelMeta.getModelCls(), modelMeta);
     }
 
     /**
@@ -254,7 +250,7 @@ public class JdbcSession extends AbstractSession {
             String sql = selectSql + fromSql + whereSql;
             LOG.info("query sql " + sql);
 //            QueryRunner runner = new QueryRunner();
-            ResultSetHandler<List<Object>> handler = getListResultSetHandler(cls);
+            ResultSetHandler<List<Object>> handler = getListResultSetHandler(modelMeta);
             NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
             try {
                 parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
@@ -319,7 +315,12 @@ public class JdbcSession extends AbstractSession {
 
     @Override
     public List findListByQuery(Class<?> cls, String queryString) {
-        return findListByRawQuery(cls, queryString);
+        return findListByQuery(cls, queryString, null);
+    }
+
+    @Override
+    public List findListByQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings) {
+        return findListByRawQuery(cls, queryString, parameterBindings);
     }
 
     @Override
@@ -329,15 +330,21 @@ public class JdbcSession extends AbstractSession {
 
     @Override
     public Object findSingleByQuery(Class<?> cls, String sql) {
-        return findSingleByNativeSql(cls, sql);
+        return findSingleByRawSql(cls, sql);
     }
 
     @Override
     public List findListByRawQuery(Class<?> cls, String queryString) {
+        return findListByRawQuery(cls, queryString, null);
+    }
+
+    @Override
+    public List findListByRawQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings) {
         try {
             QueryRunner runner = new QueryRunner();
-            ResultSetHandler<List<Object>> handler = getListResultSetHandler(cls);
-            return runner.query(getJdbcConnection(), queryString, handler);
+            ResultSetHandler<List<Object>> handler = getListResultSetHandler(getEntityMetaOfClass(cls));
+            Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
+            return runner.query(getJdbcConnection(), queryString, handler, params);
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
         }
@@ -350,10 +357,16 @@ public class JdbcSession extends AbstractSession {
 
     @Override
     public Object findFirstByRawQuery(Class<?> cls, String queryString) {
+        return findFirstByRawQuery(cls, queryString, null);
+    }
+
+    @Override
+    public Object findFirstByRawQuery(Class<?> cls, String queryString, ParameterBindings parameterBindings) {
         try {
             QueryRunner runner = new QueryRunner();
-            ResultSetHandler<List<Object>> handler = getListResultSetHandler(cls);
-            List<Object> result = runner.query(getJdbcConnection(), queryString, handler);
+            ResultSetHandler<List<Object>> handler = getListResultSetHandler(getEntityMetaOfClass(cls));
+            Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
+            List<Object> result = runner.query(getJdbcConnection(), queryString, handler, params);
             if (result.size() == 1) {
                 return result.get(0);
             } else {
@@ -370,11 +383,17 @@ public class JdbcSession extends AbstractSession {
     }
 
     @Override
-    public Object findSingleByNativeSql(Class<?> cls, String sql) {
+    public Object findSingleByRawSql(Class<?> cls, String sql) {
+        return findSingleByRawSql(cls, sql, null);
+    }
+
+    @Override
+    public Object findSingleByRawSql(Class<?> cls, String sql, ParameterBindings parameterBindings) {
         try {
             QueryRunner runner = new QueryRunner();
-            ResultSetHandler<List<Object>> handler = getListResultSetHandler(cls);
-            List<Object> result = runner.query(getJdbcConnection(), sql, handler);
+            ResultSetHandler<List<Object>> handler = getListResultSetHandler(getEntityMetaOfClass(cls));
+            Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
+            List<Object> result = runner.query(getJdbcConnection(), sql, handler, params);
             if (result.size() == 1) {
                 return result.get(0);
             } else {
@@ -386,7 +405,7 @@ public class JdbcSession extends AbstractSession {
     }
 
     @Override
-    public Object findSingleByNativeSql(String sql) {
+    public Object findSingleByRawSql(String sql) {
         throw new NotImplementedException("need a bean class");
     }
 
@@ -410,6 +429,7 @@ public class JdbcSession extends AbstractSession {
         }
     }
 
+    @Override
     public int executeNativeSql(String sql, ParameterBindings parameterBindings) {
         PreparedStatement pstm = prepareStatement(sql);
         if (parameterBindings != null) {
