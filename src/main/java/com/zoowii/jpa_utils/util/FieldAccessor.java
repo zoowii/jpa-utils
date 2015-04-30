@@ -1,5 +1,6 @@
 package com.zoowii.jpa_utils.util;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -45,6 +46,31 @@ public class FieldAccessor {
         } else {
             return null;
         }
+    }
+
+    /**
+     * get annotation of this property, first find on field, then find on get-field-method, then on set-field-method
+     * @param annoCls
+     * @param <T>
+     * @return
+     */
+    public <T extends Annotation> T getPropertyAnnotation(Class<T> annoCls) {
+        if(field != null) {
+            T annoOnField = field.getAnnotation(annoCls);
+            if (annoOnField != null) {
+                return annoOnField;
+            }
+        }
+        if(getMethod != null) {
+            T annoOnGetMethod = getMethod.getAnnotation(annoCls);
+            if (annoOnGetMethod != null) {
+                return annoOnGetMethod;
+            }
+        }
+        if(setMethod != null) {
+            return setMethod.getAnnotation(annoCls);
+        }
+        return null;
     }
 
     public Object getProperty(Object obj) {

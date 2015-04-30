@@ -46,11 +46,12 @@ public class ModelMeta {
             ModelColumnMeta columnMeta = new ModelColumnMeta();
             columnMeta.fieldName = field.getName();
             columnMeta.fieldType = field.getType();
-            if (field.getAnnotation(javax.persistence.Id.class) != null) {
+            FieldAccessor fieldAccessor = new FieldAccessor(modelCls, field.getName());
+            if (fieldAccessor.getPropertyAnnotation(javax.persistence.Id.class) != null) {
                 columnMeta.isId = true;
                 this.idColumnMeta = columnMeta;
             }
-            javax.persistence.Column columnAnno = field.getAnnotation(javax.persistence.Column.class);
+            javax.persistence.Column columnAnno = fieldAccessor.getPropertyAnnotation(javax.persistence.Column.class);
             if (columnAnno == null) {
                 columnMeta.columnName = StringUtil.underscoreName(field.getName());
                 columnMeta.nullable = true;
@@ -63,7 +64,7 @@ public class ModelMeta {
                 }
             }
             // get sql column type from columnType or @Column or @Lob annotation
-            boolean isLob = field.getAnnotation(javax.persistence.Lob.class) != null;
+            boolean isLob = fieldAccessor.getPropertyAnnotation(javax.persistence.Lob.class) != null;
             try {
                 columnMeta.columnType = sqlMapper.get(field.getType(), columnAnno, isLob);
             } catch (JdbcRuntimeException e) {
