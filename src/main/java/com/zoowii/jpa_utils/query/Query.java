@@ -227,7 +227,7 @@ public class Query<M> {
                 if(s.toUpperCase().startsWith("FROM")) {
                     return "SELECT COUNT(1) " + s;
                 } else {
-                    String alias = getTableSymbol() + "_alias_" + StringUtil.randomString(5);
+                    String alias = (getTableSymbol() + "_alias_" + StringUtil.randomString(5)).toUpperCase();
                     return String.format("SELECT COUNT(1) FROM (%s) %s", s, alias);
                 }
             }

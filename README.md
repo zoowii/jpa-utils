@@ -19,7 +19,7 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate) or direct hibernate
 * 查询的核心Finder类可以单独使用，直接使用到现有的使用JPA或Hibernate的代码中，只需要根据现有EntityManager/Session(hibernate)构造一个jpa-utils的session，然后使用Finder类来查询就好了
 * 支持类似MyBatis的执行编程式XML中的SQL(TODO)
 * 提供一个底层为mongodb的provider,并实现SQL/HQL to MongoDB-API parser(TODO)
-* 对于Query中eq/ne/gt/le/gte/orderBy等方法的属性部分,要提供自动根据属性名称转成需要的属性/字段名(TODO)
+* 支持PostgreSQL(TODO)
 
 ## Usages
 
