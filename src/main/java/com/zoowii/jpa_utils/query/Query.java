@@ -144,10 +144,22 @@ public class Query<M> {
         return this;
     }
 
-    public Query<M> or(Expr expr1, Expr expr2) {
-        this.condition = this.condition.and(expr1.or(expr2));
+    public Query<M> or(Expr... exprs) {
+        if(exprs.length<1) {
+            return this;
+        }
+        Expr curExpr = exprs[0];
+        for(int i=1;i<exprs.length;++i) {
+            curExpr = curExpr.or(exprs[i]);
+        }
+        this.condition = this.condition.and(curExpr);
         return this;
     }
+
+//    public Query<M> or(Expr expr1, Expr expr2) {
+//        this.condition = this.condition.and(expr1.or(expr2));
+//        return this;
+//    }
 
     public Query<M> and(Expr expr) {
         this.condition = this.condition.and(expr);

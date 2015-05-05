@@ -58,11 +58,12 @@ public class DaoTest extends TestCase {
             session.begin();
             try {
                 session.executeNativeSql("drop table if exists jpa_user");
-                session.executeNativeSql("create table if not exists jpa_user (id varchar(50) primary key, name varchar(500), test_age int(11))");
+                session.executeNativeSql("create table if not exists jpa_user (id varchar(50) primary key, name varchar(500), test_age int(11), random_number int(11))");
                 for (int i = 0; i < 10; ++i) {
                     User user = new User();
                     user.setName("test_user_" + UUID.randomUUID().toString());
                     user.setAge(new Random().nextInt(100));
+                    user.setRandomNumber(new Random().nextInt(100));
                     user.save();
                     LOG.info("new user's id is " + user.getId());
                     if (new Random().nextInt(10) > 5) {
@@ -109,6 +110,11 @@ public class DaoTest extends TestCase {
                     User userFromParamQuery = (User) session.findFirstByRawQuery(User.class,
                             "select * from jpa_user where id=?", new ParameterBindings(users.get(0).getId()));
                     assertNotNull(userFromParamQuery);
+                    List<User> usersFromOrColumnsQuery = User.find.where(session)
+                            .or(Expr.createLE("randomNumber", 40),
+                                    Expr.createGE("randomNumber", 41),
+                                    Expr.createEQ("age", 100)).all();
+                    assertTrue(usersFromOrColumnsQuery.size() > 0);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

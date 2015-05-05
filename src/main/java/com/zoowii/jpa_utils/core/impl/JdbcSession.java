@@ -110,6 +110,7 @@ public class JdbcSession extends AbstractSession {
 
     private PreparedStatement prepareStatement(String sql) {
         try {
+            LOG.info("execute sql:", sql);
             return getJdbcConnection().prepareStatement(sql);
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
@@ -345,6 +346,7 @@ public class JdbcSession extends AbstractSession {
             QueryRunner runner = new QueryRunner();
             ResultSetHandler<List<Object>> handler = getListResultSetHandler(getEntityMetaOfClass(cls));
             Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
+            LOG.info("query sql: " + queryString);
             return runner.query(getJdbcConnection(), queryString, handler, params);
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
@@ -367,6 +369,7 @@ public class JdbcSession extends AbstractSession {
             QueryRunner runner = new QueryRunner();
             ResultSetHandler<List<Object>> handler = getListResultSetHandler(getEntityMetaOfClass(cls));
             Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
+            LOG.info("query first sql: " + queryString);
             List<Object> result = runner.query(getJdbcConnection(), queryString, handler, params);
             if (result.size() == 1) {
                 return result.get(0);
@@ -394,6 +397,7 @@ public class JdbcSession extends AbstractSession {
             QueryRunner runner = new QueryRunner();
             ResultSetHandler<List<Object>> handler = getListResultSetHandler(getEntityMetaOfClass(cls));
             Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
+            LOG.info("query single sql: " + sql);
             List<Object> result = runner.query(getJdbcConnection(), sql, handler, params);
             if (result.size() == 1) {
                 return result.get(0);

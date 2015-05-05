@@ -19,6 +19,8 @@ public class User extends Model {
     private String name;
     @Column(name = "test_age")
     private Integer age;
+    @Column(name = "random_number")
+    private int randomNumber;
     @Transient
     private String other;
 
@@ -44,5 +46,13 @@ public class User extends Model {
 
     public void setAge(Integer age) {
         this.age = age;
+    }
+
+    public int getRandomNumber() {
+        return randomNumber;
+    }
+
+    public void setRandomNumber(int randomNumber) {
+        this.randomNumber = randomNumber;
     }
 }
