@@ -1,0 +1,10 @@
+/.idea
+/*.iml
+*~
+#*#
+/target
+/*.log
+/*.pid
+/dependency-reduced-pom.xml
+/logs
+/*.out
