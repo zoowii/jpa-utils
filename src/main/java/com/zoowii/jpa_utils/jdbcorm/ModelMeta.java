@@ -4,9 +4,8 @@ import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.util.FieldAccessor;
+import com.zoowii.jpa_utils.util.Logger;
 import com.zoowii.jpa_utils.util.StringUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.persistence.Transient;
 import java.lang.reflect.Field;
@@ -17,7 +16,6 @@ import java.util.*;
  * Created by zoowii on 15/1/26.
  */
 public class ModelMeta {
-    private static final Logger LOG = LoggerFactory.getLogger(ModelMeta.class);
     private Class<?> modelCls;
     private String tableName;
     private String tableSchema;
@@ -69,7 +67,7 @@ public class ModelMeta {
             try {
                 columnMeta.columnType = sqlMapper.get(field.getType(), columnAnno, isLob);
             } catch (JdbcRuntimeException e) {
-                LOG.debug("get sql model field type error", e);
+                Logger.debug("get sql model field type error", e);
                 continue;
             }
             columnMetas.add(columnMeta);

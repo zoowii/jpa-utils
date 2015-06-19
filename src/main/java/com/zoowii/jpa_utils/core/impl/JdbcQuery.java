@@ -7,10 +7,8 @@ import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.NamedParameterStatement;
 import com.zoowii.jpa_utils.query.ParameterBindings;
+import com.zoowii.jpa_utils.util.Logger;
 import org.apache.commons.dbutils.ResultSetHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -19,8 +17,6 @@ import java.util.List;
  * Created by zoowii on 15/1/29.
  */
 public class JdbcQuery implements IWrappedTypedQuery {
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcQuery.class);
-
     private final NamedParameterStatement namedParameterStatement;
     private final String sql;
     private final ModelMeta modelMeta;
@@ -99,7 +95,7 @@ public class JdbcQuery implements IWrappedTypedQuery {
     public List getResultList() {
         try {
             ResultSetHandler<List<Object>> handler = JdbcSession.getListResultSetHandler(modelMeta);
-            LOG.info("query sql: " + namedParameterStatement.getQuery());
+            Logger.logSql("query sql: " + namedParameterStatement.getQuery());
             ResultSet resultSet = namedParameterStatement.executeQuery();
             try {
                 return handler.handle(resultSet);

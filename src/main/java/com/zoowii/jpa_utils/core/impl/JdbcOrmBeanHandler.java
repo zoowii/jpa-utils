@@ -1,11 +1,10 @@
 package com.zoowii.jpa_utils.core.impl;
 
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
+import com.zoowii.jpa_utils.util.Logger;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.RowProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -17,8 +16,6 @@ import java.util.Map;
  * Created by zoowii on 15/5/1.
  */
 public class JdbcOrmBeanHandler<T> implements ResultSetHandler<T> {
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcOrmBeanHandler.class);
-
     private final Class<T> type;
     private final RowProcessor convert;
     private static final Map<Class<?>, RowProcessor> ROW_PROCESSOR_MAP = new HashMap<Class<?>, RowProcessor>();
@@ -66,7 +63,7 @@ public class JdbcOrmBeanHandler<T> implements ResultSetHandler<T> {
             // TODO: support array/json
             return null;
         }catch (SQLException e) {
-            LOG.error("get result set raw error", e);
+            Logger.error("get result set raw error", e);
             return null;
         }
     }

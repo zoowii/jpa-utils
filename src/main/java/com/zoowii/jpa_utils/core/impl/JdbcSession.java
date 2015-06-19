@@ -12,14 +12,13 @@ import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.util.FieldAccessor;
+import com.zoowii.jpa_utils.util.Logger;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.exception.CloneFailedException;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
@@ -31,8 +30,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by zoowii on 15/1/26.
  */
 public class JdbcSession extends AbstractSession {
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcSession.class);
-
     private java.sql.Connection jdbcConnection;
     private JdbcSessionFactory jdbcSessionFactory;
     private AtomicBoolean activeFlag = new AtomicBoolean(false);
@@ -110,7 +107,7 @@ public class JdbcSession extends AbstractSession {
 
     private PreparedStatement prepareStatement(String sql) {
         try {
-            LOG.info("execute sql:", sql);
+            Logger.logSql("execute sql:" + sql);
             return getJdbcConnection().prepareStatement(sql);
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
@@ -135,7 +132,7 @@ public class JdbcSession extends AbstractSession {
         try {
             ModelMeta modelMeta = getEntityMetaOfClass(entity.getClass());
             SqlStatementInfo insertSqlInfo = modelMeta.getSqlMapper().getInsert(modelMeta, entity);
-            LOG.info("insert sql: " + insertSqlInfo.getSql());
+            Logger.logSql("insert sql: " + insertSqlInfo.getSql());
             NamedParameterStatement pstm = new NamedParameterStatement(getJdbcConnection(), insertSqlInfo.getSql(), java.sql.Statement.RETURN_GENERATED_KEYS);
             try {
                 ParameterBindings parameterBindings = insertSqlInfo.getParameterBindings();
@@ -176,7 +173,7 @@ public class JdbcSession extends AbstractSession {
                     return modelMeta.getSqlMapper().getIdEqConditionSubSql(modelMeta, idAccessor.getProperty(entity), parameterBindings, null);
                 }
             });
-            LOG.info("update sql: " + updateSqlInfo.getSql());
+            Logger.logSql("update sql: " + updateSqlInfo.getSql());
             NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), updateSqlInfo.getSql());
             try {
                 updateSqlInfo.getParameterBindings().applyToNamedPrepareStatement(namedParameterStatement);
@@ -250,8 +247,7 @@ public class JdbcSession extends AbstractSession {
             String conditionSql = modelMeta.getSqlMapper().getIdEqConditionSubSql(modelMeta, id, parameterBindings, tableAlias);
             String whereSql = modelMeta.getSqlMapper().getWhereSubSql(conditionSql);
             String sql = selectSql + fromSql + whereSql;
-            LOG.info("query sql " + sql);
-//            QueryRunner runner = new QueryRunner();
+            Logger.logSql("query sql " + sql);
             ResultSetHandler<List<Object>> handler = getListResultSetHandler(modelMeta);
             NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
             try {
@@ -259,7 +255,6 @@ public class JdbcSession extends AbstractSession {
                 ResultSet resultSet = namedParameterStatement.executeQuery();
                 try {
                     List<Object> result = handler.handle(resultSet);
-//            List<Object> result = runner.query(getJdbcConnection(), sql, handler, parameterBindings.getIndexParametersArray());
                     if (result.size() > 0) {
                         return result.get(0);
                     } else {
@@ -288,7 +283,7 @@ public class JdbcSession extends AbstractSession {
             String conditionSql = modelMeta.getSqlMapper().getIdEqConditionSubSql(modelMeta, idAccessor.getProperty(entity), parameterBindings, tableAlias);
             String whereSql = modelMeta.getSqlMapper().getWhereSubSql(conditionSql);
             String sql = modelMeta.getSqlMapper().getDeleteSubSql(fromSql, whereSql);
-            LOG.info("delete sql: " + sql);
+            Logger.logSql("delete sql: " + sql);
             NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
             try {
                 parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
@@ -346,7 +341,7 @@ public class JdbcSession extends AbstractSession {
             QueryRunner runner = new QueryRunner();
             ResultSetHandler<List<Object>> handler = getListResultSetHandler(getEntityMetaOfClass(cls));
             Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
-            LOG.info("query sql: " + queryString);
+            Logger.logSql("query sql: " + queryString);
             return runner.query(getJdbcConnection(), queryString, handler, params);
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
@@ -369,7 +364,7 @@ public class JdbcSession extends AbstractSession {
             QueryRunner runner = new QueryRunner();
             ResultSetHandler<List<Object>> handler = getListResultSetHandler(getEntityMetaOfClass(cls));
             Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
-            LOG.info("query first sql: " + queryString);
+            Logger.logSql("query first sql: " + queryString);
             List<Object> result = runner.query(getJdbcConnection(), queryString, handler, params);
             if (result.size() == 1) {
                 return result.get(0);
@@ -397,7 +392,7 @@ public class JdbcSession extends AbstractSession {
             QueryRunner runner = new QueryRunner();
             ResultSetHandler<List<Object>> handler = getListResultSetHandler(getEntityMetaOfClass(cls));
             Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
-            LOG.info("query single sql: " + sql);
+            Logger.logSql("query single sql: " + sql);
             List<Object> result = runner.query(getJdbcConnection(), sql, handler, params);
             if (result.size() == 1) {
                 return result.get(0);

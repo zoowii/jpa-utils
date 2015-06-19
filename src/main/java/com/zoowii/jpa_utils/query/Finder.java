@@ -36,7 +36,8 @@ public class Finder<K, M> {
         if (!Model.getSession().isTransactionActive()) {
             Model.getSession().begin();
         }
-        return session.findListByQuery(modelCls, "from " + modelCls.getSimpleName());
+        return where(session).all();
+//        return session.findListByQuery(modelCls, "from " + modelCls.getSimpleName());
     }
 
     public List<M> findAll() {
