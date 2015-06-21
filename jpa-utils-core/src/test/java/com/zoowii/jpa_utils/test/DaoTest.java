@@ -13,6 +13,7 @@ import com.zoowii.jpa_utils.test.models.User;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.StringUtil;
 import junit.framework.TestCase;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,34 @@ public class DaoTest extends TestCase {
         });
     }
 
+    public void testJdbcDeleteBatch() {
+        try {
+            JdbcSessionFactory sessionFactory = getJdbcTestSessionFactory();
+            JdbcSession session = (JdbcSession) sessionFactory.createSession().asThreadLocal();
+            session.begin();
+            try {
+                session.executeNativeSql("drop table if exists jpa_user");
+                session.executeNativeSql("create table if not exists jpa_user (id varchar(50) primary key, name varchar(500), test_age int(11), random_number int(11))");
+                for(int i=0;i<10;++i) {
+                    User user = new User();
+                    user.setAge(999);
+                    user.setName(StringUtil.randomString(10));
+                    user.setRandomNumber(new Random().nextInt(100));
+                    user.save();
+                }
+                int count =session.delete(User.class, Expr.createEQ("age", 999));
+                Assert.assertEquals(count, 10);
+                session.commit();
+            } catch (Exception e) {
+                e.printStackTrace();
+                session.rollback();
+            } finally {
+                session.close();
+            }
+        } catch (Exception e) {
+            LOG.error("test jdbc error", e);
+        }
+    }
 
     public void testJdbc() {
         try {

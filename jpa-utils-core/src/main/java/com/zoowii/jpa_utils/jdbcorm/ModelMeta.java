@@ -1,11 +1,15 @@
 package com.zoowii.jpa_utils.jdbcorm;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.util.FieldAccessor;
 import com.zoowii.jpa_utils.util.Logger;
 import com.zoowii.jpa_utils.util.StringUtil;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.persistence.Transient;
 import java.lang.reflect.Field;
@@ -75,7 +79,22 @@ public class ModelMeta {
         return columnMetas;
     }
 
-    public ModelMeta(Class<?> modelCls, SqlMapper sqlMapper) {
+    private static final Map<Class<?>, ModelMeta> modelMetaCache = new HashMap<Class<?>, ModelMeta>();
+
+    public static ModelMeta getModelMeta(Class<?> modelCls, SqlMapper sqlMapper) {
+        ModelMeta modelMeta = modelMetaCache.get(modelCls);
+        if(modelMeta==null) {
+            synchronized (modelMetaCache) {
+                if(modelMetaCache.get(modelCls)==null) {
+                    modelMetaCache.put(modelCls, new ModelMeta(modelCls, sqlMapper));
+                }
+            }
+            modelMeta = modelMetaCache.get(modelCls);
+        }
+        return modelMeta;
+    }
+
+    private ModelMeta(Class<?> modelCls, SqlMapper sqlMapper) {
         this.sqlMapper = sqlMapper;
         // get meta info of orm model
         this.modelCls = modelCls;

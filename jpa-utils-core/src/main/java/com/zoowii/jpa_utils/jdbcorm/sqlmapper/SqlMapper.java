@@ -177,6 +177,12 @@ public abstract class SqlMapper {
         return SqlStatementInfo.of(sql, parameterBindings);
     }
 
+    /**
+     * TODO: 建立一个insertBuilder,避免每次都构造SQL影响性能
+     * @param modelMeta
+     * @param entity
+     * @return
+     */
     public SqlStatementInfo getInsert(ModelMeta modelMeta, Object entity) {
         String tableFullName = StringUtil.isEmpty(
                 modelMeta.getTableSchema()) ? getSqlTableNameWrapped(modelMeta.getTableName()) : String.format("%s.%s", modelMeta.getTableSchema(), getSqlTableNameWrapped(modelMeta.getTableName()));
@@ -184,7 +190,7 @@ public abstract class SqlMapper {
         boolean includeId = true;
         for (ModelMeta.ModelColumnMeta columnMeta : modelMeta.getColumnMetaSet()) {
             if (columnMeta.isId) {
-                FieldAccessor fieldAccessor = new FieldAccessor(modelMeta.getModelCls(), columnMeta.fieldName);
+                FieldAccessor fieldAccessor = FieldAccessor.getFieldAccessor(modelMeta.getModelCls(), columnMeta.fieldName);
                 Object idValue = fieldAccessor.getProperty(entity);
                 if (idValue == null) {
                     // TODO: use generator strategy to generate new id value

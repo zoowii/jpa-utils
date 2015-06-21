@@ -10,7 +10,11 @@ import com.zoowii.jpa_utils.jdbcorm.NamedParameterStatement;
 import com.zoowii.jpa_utils.jdbcorm.SqlStatementInfo;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
+import com.zoowii.jpa_utils.orm.Model;
+import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
+import com.zoowii.jpa_utils.query.Query;
+import com.zoowii.jpa_utils.query.QueryInfo;
 import com.zoowii.jpa_utils.util.FieldAccessor;
 import com.zoowii.jpa_utils.util.Logger;
 import org.apache.commons.beanutils.BeanUtils;
@@ -288,6 +292,29 @@ public class JdbcSession extends AbstractSession {
             try {
                 parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
                 namedParameterStatement.executeUpdate();
+            } finally {
+                namedParameterStatement.close();
+            }
+        } catch (SQLException e) {
+            throw new JdbcRuntimeException(e);
+        }
+    }
+
+    @Override
+    public int delete(Class<?> model, Expr expr) {
+        try {
+            ModelMeta modelMeta = getEntityMetaOfClass(model);
+            SqlMapper sqlMapper = getSqlMapper();
+            Pair<String, String> fromSqlPair = sqlMapper.getFromSubSql(modelMeta, false);
+            Query query = new Query(model, Model.getSession());
+            QueryInfo exprQuery = expr.toQueryString(sqlMapper, query);
+            String sql = String.format("DELETE %s WHERE (%s)", fromSqlPair.getLeft(), exprQuery.getQueryString());
+            Logger.info("delete sql: " + sql);
+            ParameterBindings parameterBindings = exprQuery.getParameterBindings();
+            NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
+            try {
+                parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
+                return namedParameterStatement.executeUpdate();
             } finally {
                 namedParameterStatement.close();
             }

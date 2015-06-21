@@ -5,6 +5,7 @@ import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.query.QueryInfo;
+import com.zoowii.jpa_utils.util.Logger;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ public abstract class AbstractSession implements Session {
     public int delete(Class<?> model, Expr expr) {
         QueryInfo exprQuery = expr.toQueryString(getSqlMapper());
         String sql = String.format("delete from %s where (%s)", model.getSimpleName(), exprQuery.getQueryString());
+        Logger.info("delete sql: " + sql);
         IWrappedQuery query = createQuery(sql);
         ParameterBindings parameterBindings = exprQuery.getParameterBindings();
         if (parameterBindings != null) {
@@ -101,7 +103,7 @@ public abstract class AbstractSession implements Session {
         if(ENTITY_META_CACHE.containsKey(entityCls)) {
             return ENTITY_META_CACHE.get(entityCls);
         }
-        ModelMeta modelMeta = new ModelMeta(entityCls, getSqlMapper());
+        ModelMeta modelMeta = ModelMeta.getModelMeta(entityCls, getSqlMapper());
         ENTITY_META_CACHE.put(entityCls, modelMeta);
         return modelMeta;
     }

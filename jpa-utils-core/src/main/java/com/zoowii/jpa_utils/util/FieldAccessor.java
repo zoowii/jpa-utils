@@ -4,6 +4,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * java bean property(field/get-method/set-method)'s wrapper of java bean
@@ -14,6 +16,20 @@ public class FieldAccessor {
     private Method setMethod;
     private final Class<?> cls;
     private final String name;
+
+    private static final Map<String, FieldAccessor> fieldAccessorCache = new HashMap<String, FieldAccessor>();
+
+    public static FieldAccessor getFieldAccessor(Class<?> cls, String name) {
+        String key = cls.getCanonicalName() + "@" + name;
+        if(!fieldAccessorCache.containsKey(key)) {
+            synchronized (fieldAccessorCache) {
+                if(!fieldAccessorCache.containsKey(key)) {
+                    fieldAccessorCache.put(key, new FieldAccessor(cls, name));
+                }
+            }
+        }
+        return fieldAccessorCache.get(key);
+    }
 
     @SuppressWarnings("unchecked")
     public FieldAccessor(Class<?> cls, String name) {
