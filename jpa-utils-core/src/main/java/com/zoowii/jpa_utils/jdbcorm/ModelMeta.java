@@ -1,15 +1,10 @@
 package com.zoowii.jpa_utils.jdbcorm;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
-import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.util.FieldAccessor;
 import com.zoowii.jpa_utils.util.Logger;
 import com.zoowii.jpa_utils.util.StringUtil;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.persistence.Transient;
 import java.lang.reflect.Field;
@@ -168,6 +163,6 @@ public class ModelMeta {
         if (idColumnMeta == null) {
             return null;
         }
-        return new FieldAccessor(modelCls, idColumnMeta.fieldName);
+        return FieldAccessor.getFieldAccessor(modelCls, idColumnMeta.fieldName);
     }
 }

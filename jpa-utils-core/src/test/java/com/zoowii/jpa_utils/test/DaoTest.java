@@ -1,14 +1,10 @@
 package com.zoowii.jpa_utils.test;
 
 import com.google.common.base.Function;
-import com.zoowii.jpa_utils.core.impl.EntitySession;
-import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.core.impl.JdbcSession;
 import com.zoowii.jpa_utils.core.impl.JdbcSessionFactory;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
-import com.zoowii.jpa_utils.test.models.Employee;
-import com.zoowii.jpa_utils.query.Query;
 import com.zoowii.jpa_utils.test.models.User;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.StringUtil;
@@ -19,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -59,14 +54,20 @@ public class DaoTest extends TestCase {
             try {
                 session.executeNativeSql("drop table if exists jpa_user");
                 session.executeNativeSql("create table if not exists jpa_user (id varchar(50) primary key, name varchar(500), test_age int(11), random_number int(11))");
-                for(int i=0;i<10;++i) {
-                    User user = new User();
-                    user.setAge(999);
-                    user.setName(StringUtil.randomString(10));
-                    user.setRandomNumber(new Random().nextInt(100));
-                    user.save();
+                session.startBatch();
+                try {
+                    for (int i = 0; i < 10; ++i) {
+                        User user = new User();
+                        user.setAge(999);
+                        user.setName(StringUtil.randomString(10));
+                        user.setRandomNumber(new Random().nextInt(100));
+                        user.save();
+                    }
+                    session.executeBatch();
+                } finally {
+                    session.endBatch();
                 }
-                int count =session.delete(User.class, Expr.createEQ("age", 999));
+                int count = session.delete(User.class, Expr.createEQ("age", 999));
                 Assert.assertEquals(count, 10);
                 session.commit();
             } catch (Exception e) {
@@ -135,7 +136,7 @@ public class DaoTest extends TestCase {
                         "select * from jpa_user where test_age > ?",
                         new ParameterBindings(50));
                 assertEquals(usersFromParamQuery.size(), users1.size());
-                if(users.size()>0) {
+                if (users.size() > 0) {
                     User userFromParamQuery = (User) session.findFirstByRawQuery(User.class,
                             "select * from jpa_user where id=?", new ParameterBindings(users.get(0).getId()));
                     assertNotNull(userFromParamQuery);

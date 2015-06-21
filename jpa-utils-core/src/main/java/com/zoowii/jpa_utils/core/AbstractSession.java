@@ -9,9 +9,9 @@ import com.zoowii.jpa_utils.util.Logger;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -50,6 +50,41 @@ public abstract class AbstractSession implements Session {
         getTransaction().commit();
     }
 
+    @Override
+    public void startBatch() {
+
+    }
+
+    @Override
+    public void endBatch() {
+
+    }
+
+    @Override
+    public int[] executeBatch() {
+        return new int[0];
+    }
+
+    @Override
+    public void updateBatch(List<Object> entities) {
+        for (Object entity : entities) {
+            update(entity);
+        }
+    }
+
+    @Override
+    public void saveBatch(List<Object> entities) {
+        for (Object entity : entities) {
+            save(entity);
+        }
+    }
+
+    @Override
+    public void deleteBatch(List<Object> entities) {
+        for (Object entity : entities) {
+            delete(entity);
+        }
+    }
 
     @Override
     public int delete(Class<?> model, Expr expr) {

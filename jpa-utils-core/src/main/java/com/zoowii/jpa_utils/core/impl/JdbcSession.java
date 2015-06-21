@@ -25,7 +25,10 @@ import org.apache.commons.lang3.exception.CloneFailedException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.lang.reflect.InvocationTargetException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -38,6 +41,8 @@ public class JdbcSession extends AbstractSession {
     private JdbcSessionFactory jdbcSessionFactory;
     private AtomicBoolean activeFlag = new AtomicBoolean(false);
     private SqlMapper sqlMapper = new MySQLMapper(); // FIXME
+    private transient boolean isInBatch = false;
+    private transient NamedParameterStatement batchPreparedStatement;
 
     public AtomicBoolean getActiveFlag() {
         return activeFlag;
@@ -137,29 +142,38 @@ public class JdbcSession extends AbstractSession {
             ModelMeta modelMeta = getEntityMetaOfClass(entity.getClass());
             SqlStatementInfo insertSqlInfo = modelMeta.getSqlMapper().getInsert(modelMeta, entity);
             Logger.logSql("insert sql: " + insertSqlInfo.getSql());
-            NamedParameterStatement pstm = new NamedParameterStatement(getJdbcConnection(), insertSqlInfo.getSql(), java.sql.Statement.RETURN_GENERATED_KEYS);
-            try {
-                ParameterBindings parameterBindings = insertSqlInfo.getParameterBindings();
-                parameterBindings.applyToNamedPrepareStatement(pstm);
-                int changedCount = pstm.executeUpdate();
-                if (changedCount < 1) {
-                    throw new JdbcRuntimeException("No record affected when save entity");
-                }
-                FieldAccessor idAccessor = modelMeta.getIdAccessor();
-                if (idAccessor != null && idAccessor.getProperty(entity) == null) {
-                    ResultSet generatedKeysResultSet = pstm.getStatement().getGeneratedKeys();
-                    try {
-                        if (generatedKeysResultSet.next()) {
-                            Object generatedId = generatedKeysResultSet.getObject(1);
-                            idAccessor.setProperty(entity, generatedId);
-                            refresh(entity);
-                        }
-                    } finally {
-                        generatedKeysResultSet.close();
+            if (!isInBatch) {
+                NamedParameterStatement pstm = new NamedParameterStatement(getJdbcConnection(), insertSqlInfo.getSql(), java.sql.Statement.RETURN_GENERATED_KEYS);
+                try {
+                    ParameterBindings parameterBindings = insertSqlInfo.getParameterBindings();
+                    parameterBindings.applyToNamedPrepareStatement(pstm);
+                    int changedCount = pstm.executeUpdate();
+                    if (changedCount < 1) {
+                        throw new JdbcRuntimeException("No record affected when save entity");
                     }
+                    FieldAccessor idAccessor = modelMeta.getIdAccessor();
+                    if (idAccessor != null && idAccessor.getProperty(entity) == null) {
+                        ResultSet generatedKeysResultSet = pstm.getStatement().getGeneratedKeys();
+                        try {
+                            if (generatedKeysResultSet.next()) {
+                                Object generatedId = generatedKeysResultSet.getObject(1);
+                                idAccessor.setProperty(entity, generatedId);
+                                refresh(entity);
+                            }
+                        } finally {
+                            generatedKeysResultSet.close();
+                        }
+                    }
+                } finally {
+                    pstm.close();
                 }
-            } finally {
-                pstm.close();
+            } else {
+                if (batchPreparedStatement == null) {
+                    batchPreparedStatement = new NamedParameterStatement(getJdbcConnection(), insertSqlInfo.getSql());
+                }
+                ParameterBindings parameterBindings = insertSqlInfo.getParameterBindings();
+                parameterBindings.applyToNamedPrepareStatement(batchPreparedStatement);
+                batchPreparedStatement.addBatch();
             }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
@@ -178,15 +192,93 @@ public class JdbcSession extends AbstractSession {
                 }
             });
             Logger.logSql("update sql: " + updateSqlInfo.getSql());
-            NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), updateSqlInfo.getSql());
-            try {
-                updateSqlInfo.getParameterBindings().applyToNamedPrepareStatement(namedParameterStatement);
-                namedParameterStatement.executeUpdate();
-            } finally {
-                namedParameterStatement.close();
+            if (!isInBatch) {
+                NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), updateSqlInfo.getSql());
+                try {
+                    updateSqlInfo.getParameterBindings().applyToNamedPrepareStatement(namedParameterStatement);
+                    namedParameterStatement.executeUpdate();
+                } finally {
+                    namedParameterStatement.close();
+                }
+            } else {
+                if (batchPreparedStatement == null) {
+                    batchPreparedStatement = new NamedParameterStatement(getJdbcConnection(), updateSqlInfo.getSql());
+                }
+                updateSqlInfo.getParameterBindings().applyToNamedPrepareStatement(batchPreparedStatement);
+                batchPreparedStatement.addBatch();
             }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
+        }
+    }
+
+    @Override
+    public void startBatch() {
+        this.isInBatch = true;
+    }
+
+    @Override
+    public void endBatch() {
+        this.isInBatch = false;
+        if (this.batchPreparedStatement != null) {
+            try {
+                this.batchPreparedStatement.close();
+            } catch (SQLException e) {
+                throw new JdbcRuntimeException(e);
+            }
+        }
+        this.batchPreparedStatement = null;
+    }
+
+    @Override
+    public int[] executeBatch() {
+        if (isInBatch && batchPreparedStatement != null) {
+            try {
+                return batchPreparedStatement.executeBatch();
+            } catch (SQLException e) {
+                throw new JdbcRuntimeException(e);
+            }
+        } else {
+            throw new JdbcRuntimeException("Not in batch");
+        }
+    }
+
+    @Override
+    public void updateBatch(List<Object> entities) {
+        startBatch();
+        try {
+            for (Object entity : entities) {
+                update(entity);
+            }
+            executeBatch();
+        } finally {
+            endBatch();
+        }
+    }
+
+    @Override
+    public void saveBatch(List<Object> entities) {
+        startBatch();
+        try {
+            for (Object entity : entities) {
+                save(entity);
+            }
+            executeBatch();
+        } finally {
+            endBatch();
+        }
+    }
+
+    @Override
+    public void deleteBatch(List<Object> entities) {
+        startBatch();
+        try {
+            for (Object entity : entities) {
+                delete(entity);
+            }
+            executeBatch();
+        } finally {
+            endBatch();
         }
     }
 
@@ -288,12 +380,20 @@ public class JdbcSession extends AbstractSession {
             String whereSql = modelMeta.getSqlMapper().getWhereSubSql(conditionSql);
             String sql = modelMeta.getSqlMapper().getDeleteSubSql(fromSql, whereSql);
             Logger.logSql("delete sql: " + sql);
-            NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
-            try {
-                parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
-                namedParameterStatement.executeUpdate();
-            } finally {
-                namedParameterStatement.close();
+            if (!isInBatch) {
+                NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
+                try {
+                    parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
+                    namedParameterStatement.executeUpdate();
+                } finally {
+                    namedParameterStatement.close();
+                }
+            } else {
+                if (batchPreparedStatement == null) {
+                    batchPreparedStatement = new NamedParameterStatement(getJdbcConnection(), sql);
+                }
+                parameterBindings.applyToNamedPrepareStatement(batchPreparedStatement);
+                batchPreparedStatement.addBatch();
             }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
@@ -311,12 +411,21 @@ public class JdbcSession extends AbstractSession {
             String sql = String.format("DELETE %s WHERE (%s)", fromSqlPair.getLeft(), exprQuery.getQueryString());
             Logger.info("delete sql: " + sql);
             ParameterBindings parameterBindings = exprQuery.getParameterBindings();
-            NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
-            try {
-                parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
-                return namedParameterStatement.executeUpdate();
-            } finally {
-                namedParameterStatement.close();
+            if (!isInBatch) {
+                NamedParameterStatement namedParameterStatement = new NamedParameterStatement(getJdbcConnection(), sql);
+                try {
+                    parameterBindings.applyToNamedPrepareStatement(namedParameterStatement);
+                    return namedParameterStatement.executeUpdate();
+                } finally {
+                    namedParameterStatement.close();
+                }
+            } else {
+                if (batchPreparedStatement == null) {
+                    batchPreparedStatement = new NamedParameterStatement(getJdbcConnection(), sql);
+                }
+                parameterBindings.applyToNamedPrepareStatement(batchPreparedStatement);
+                batchPreparedStatement.addBatch();
+                return 0;
             }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);

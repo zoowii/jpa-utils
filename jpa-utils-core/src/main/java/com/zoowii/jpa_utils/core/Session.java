@@ -48,6 +48,18 @@ public interface Session {
 
     void update(Object entity);
 
+    void startBatch();
+
+    void endBatch();
+
+    int[] executeBatch();
+
+    void updateBatch(List<Object> entities);
+
+    void saveBatch(List<Object> entities);
+
+    void deleteBatch(List<Object> entities);
+
     void merge(Object entity);
 
     void detach(Object entity);
