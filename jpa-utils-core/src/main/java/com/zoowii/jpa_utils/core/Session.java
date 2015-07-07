@@ -26,11 +26,15 @@ public interface Session {
 
     boolean isOpen();
 
+    boolean isRunning();
+
     void rollback();
 
     boolean isClosed();
 
     void close();
+
+    void closeFully();
 
     /**
      * close all session factory so you can't use it to create session again

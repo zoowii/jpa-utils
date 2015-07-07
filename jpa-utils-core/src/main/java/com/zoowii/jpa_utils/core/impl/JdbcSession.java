@@ -43,6 +43,7 @@ public class JdbcSession extends AbstractSession {
     private SqlMapper sqlMapper = new MySQLMapper(); // FIXME
     private transient boolean isInBatch = false;
     private transient NamedParameterStatement batchPreparedStatement;
+    private transient boolean closed = false;
 
     public AtomicBoolean getActiveFlag() {
         return activeFlag;
@@ -92,7 +93,13 @@ public class JdbcSession extends AbstractSession {
     @Override
     public boolean isOpen() {
         try {
-            return !getJdbcConnection().isClosed();
+            if(closed) {
+                return false;
+            }
+            if(jdbcConnection==null) {
+                return true;
+            }
+            return !jdbcConnection.isClosed();
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
         }
@@ -100,8 +107,17 @@ public class JdbcSession extends AbstractSession {
 
     @Override
     public void close() {
+        if (getTransactionNestedLevel() > 0) {
+            return;
+        }
         try {
-            getJdbcConnection().close();
+            if(closed) {
+                return;
+            }
+            if(jdbcConnection!=null) {
+                jdbcConnection.close();
+            }
+            closed = true;
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
         }

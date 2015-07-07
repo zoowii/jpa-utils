@@ -39,6 +39,11 @@ public abstract class AbstractSession implements Session {
     }
 
     @Override
+    public boolean isRunning() {
+        return txStack.size() > 0;
+    }
+
+    @Override
     public void commit() {
         if (!isOpen()) {
             begin();
@@ -122,6 +127,12 @@ public abstract class AbstractSession implements Session {
     }
 
     @Override
+    public void closeFully() {
+        txStack.clear();
+        close();
+    }
+
+    @Override
     public int getTransactionNestedLevel() {
         return txStack.size();
     }
@@ -148,6 +159,12 @@ public abstract class AbstractSession implements Session {
      */
     private static final ThreadLocal<WeakReference<Session>> defaultThreadLocalSessions = new ThreadLocal<WeakReference<Session>>();
 
+    private static transient SessionFactory defaultSessionFactory = null;
+
+    public static void setDefaultSessionFactory(SessionFactory sessionFactory) {
+        defaultSessionFactory = sessionFactory;
+    }
+
     /**
      * check whether session binded to current thread first, if not, use EntitySessionFactory.currentSession(),
      * and set result to binded session of current thread
@@ -159,14 +176,28 @@ public abstract class AbstractSession implements Session {
         if (defaultSession != null && defaultSession.get() != null) {
             return defaultSession.get();
         }
-        Session session = EntitySessionFactory.getDefaultEntitySessionFactory().currentSession();
+        SessionFactory sessionFactory = defaultSessionFactory;
+        if(sessionFactory==null) {
+            sessionFactory = EntitySessionFactory.getDefaultEntitySessionFactory();
+        }
+        Session session = sessionFactory.currentSession();
         defaultThreadLocalSessions.set(new WeakReference<Session>(session));
         return session;
     }
 
+    public static void removeBindingCurrentSession() {
+        defaultThreadLocalSessions.remove();
+    }
+
     public static Session bindCurrentSession(Session session) {
-        defaultThreadLocalSessions.set(new WeakReference<Session>(session));
-        return session;
+        synchronized (defaultThreadLocalSessions) {
+            if(session == null) {
+                defaultThreadLocalSessions.remove();
+            } else {
+                defaultThreadLocalSessions.set(new WeakReference<Session>(session));
+            }
+            return session;
+        }
     }
 
     public static Session getSession(String persistenceUnit) {
