@@ -1,5 +1,6 @@
 package com.zoowii.jpa_utils.core.impl;
 
+import com.zoowii.jpa_utils.core.AbstractSession;
 import com.zoowii.jpa_utils.core.AbstractSessionFactory;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
@@ -9,14 +10,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * TODO
  * 直接使用jdbc Connection作为Session基础的session factory
  * Created by zoowii on 15/1/26.
  */
 public class JdbcSessionFactory extends AbstractSessionFactory {
 
-    public static interface JdbcConnectionSource {
-        public Connection get();
+    public interface JdbcConnectionSource {
+        Connection get();
     }
 
     private JdbcConnectionSource jdbcConnectionSource;
@@ -24,6 +24,7 @@ public class JdbcSessionFactory extends AbstractSessionFactory {
 
     public JdbcSessionFactory(JdbcConnectionSource jdbcConnectionSource) {
         this.jdbcConnectionSource = jdbcConnectionSource;
+        AbstractSession.setDefaultSessionFactoryIfEmpty(this);
     }
 
     public JdbcSessionFactory(final DataSource dataSource) {
@@ -38,6 +39,7 @@ public class JdbcSessionFactory extends AbstractSessionFactory {
                 }
             }
         };
+        AbstractSession.setDefaultSessionFactoryIfEmpty(this);
     }
 
     @Override

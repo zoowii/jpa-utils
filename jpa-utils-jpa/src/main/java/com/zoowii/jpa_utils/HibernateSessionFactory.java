@@ -1,6 +1,7 @@
 package com.zoowii.jpa_utils;
 
 
+import com.zoowii.jpa_utils.core.AbstractSession;
 import com.zoowii.jpa_utils.core.AbstractSessionFactory;
 import com.zoowii.jpa_utils.core.Session;
 
@@ -12,6 +13,7 @@ public class HibernateSessionFactory extends AbstractSessionFactory {
 
     public HibernateSessionFactory(org.hibernate.SessionFactory hibernateSessionFactory) {
         this.hibernateSessionFactory = hibernateSessionFactory;
+        AbstractSession.setDefaultSessionFactoryIfEmpty(this);
     }
 
     @Override

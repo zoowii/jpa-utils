@@ -1,5 +1,6 @@
 package com.zoowii.jpa_utils.core.impl;
 
+import com.zoowii.jpa_utils.core.AbstractSession;
 import com.zoowii.jpa_utils.core.AbstractSessionFactory;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.util.StringUtil;
@@ -78,6 +79,7 @@ public class EntitySessionFactory extends AbstractSessionFactory {
 
     public EntitySessionFactory(EntityManagerFactory emf) {
         this.emf = emf;
+        AbstractSession.setDefaultSessionFactoryIfEmpty(this);
     }
 
     @Override

@@ -165,6 +165,19 @@ public abstract class AbstractSession implements Session {
         defaultSessionFactory = sessionFactory;
     }
 
+    public static void setDefaultSessionFactoryIfEmpty(SessionFactory sessionFactory) {
+        if (sessionFactory == null) {
+            return;
+        }
+        if (defaultSessionFactory == null) {
+            synchronized (AbstractSession.class) {
+                if (defaultSessionFactory == null) {
+                    defaultSessionFactory = sessionFactory;
+                }
+            }
+        }
+    }
+
     /**
      * check whether session binded to current thread first, if not, use EntitySessionFactory.currentSession(),
      * and set result to binded session of current thread
