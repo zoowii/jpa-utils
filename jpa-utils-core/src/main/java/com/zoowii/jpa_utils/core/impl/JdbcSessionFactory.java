@@ -4,6 +4,8 @@ import com.zoowii.jpa_utils.core.AbstractSession;
 import com.zoowii.jpa_utils.core.AbstractSessionFactory;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -21,13 +23,19 @@ public class JdbcSessionFactory extends AbstractSessionFactory {
 
     private JdbcConnectionSource jdbcConnectionSource;
     private DataSource dataSource;
+    private SqlMapper sqlMapper;
 
-    public JdbcSessionFactory(JdbcConnectionSource jdbcConnectionSource) {
+    public JdbcSessionFactory(JdbcConnectionSource jdbcConnectionSource, SqlMapper sqlMapper) {
         this.jdbcConnectionSource = jdbcConnectionSource;
+        this.sqlMapper = sqlMapper;
         AbstractSession.setDefaultSessionFactoryIfEmpty(this);
     }
 
-    public JdbcSessionFactory(final DataSource dataSource) {
+    public JdbcSessionFactory(JdbcConnectionSource jdbcConnectionSource) {
+        this(jdbcConnectionSource, new MySQLMapper());
+    }
+
+    public JdbcSessionFactory(final DataSource dataSource, SqlMapper sqlMapper) {
         this.dataSource = dataSource;
         this.jdbcConnectionSource = new JdbcConnectionSource() {
             @Override
@@ -39,12 +47,27 @@ public class JdbcSessionFactory extends AbstractSessionFactory {
                 }
             }
         };
+        this.sqlMapper = sqlMapper;
         AbstractSession.setDefaultSessionFactoryIfEmpty(this);
+    }
+
+    public JdbcSessionFactory(final DataSource dataSource) {
+        this(dataSource, new MySQLMapper());
+    }
+
+    public SqlMapper getSqlMapper() {
+        return sqlMapper;
+    }
+
+    public void setSqlMapper(SqlMapper sqlMapper) {
+        this.sqlMapper = sqlMapper;
     }
 
     @Override
     public Session createSession() {
-        return new JdbcSession(this);
+        JdbcSession session = new JdbcSession(this);
+        session.setSqlMapper(sqlMapper);
+        return session;
     }
 
     @Override

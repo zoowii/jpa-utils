@@ -3,6 +3,7 @@ package com.zoowii.jpa_utils.test;
 import com.google.common.base.Function;
 import com.zoowii.jpa_utils.core.impl.JdbcSession;
 import com.zoowii.jpa_utils.core.impl.JdbcSessionFactory;
+import com.zoowii.jpa_utils.jdbcorm.sqlmapper.PgSQLMapper;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.test.models.User;
@@ -36,6 +37,17 @@ public class DaoTest extends TestCase {
         }
     }
 
+    private Connection getPgsqlJdbcTestConnection() {
+        try {
+            Class.forName("org.postgresql.Driver");
+            String jdbcUrl = "jdbc:postgresql://localhost:5432/test";
+            return DriverManager.getConnection(jdbcUrl, "postgres", "postgres");
+        } catch (Exception e) {
+            LOG.error("get pgsql jdbc conn error", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     private JdbcSessionFactory getJdbcTestSessionFactory() {
         final Connection conn = getJdbcTestConnection();
         return new JdbcSessionFactory(new JdbcSessionFactory.JdbcConnectionSource() {
@@ -46,6 +58,16 @@ public class DaoTest extends TestCase {
         });
     }
 
+    private JdbcSessionFactory getPgsqlJdbcTestSessionFactory() {
+        final Connection conn = getPgsqlJdbcTestConnection();
+        return new JdbcSessionFactory(new JdbcSessionFactory.JdbcConnectionSource() {
+            @Override
+            public Connection get() {
+                return conn;
+            }
+        }, new PgSQLMapper());
+    }
+
     public void testJdbcDeleteBatch() {
         try {
             JdbcSessionFactory sessionFactory = getJdbcTestSessionFactory();
@@ -53,7 +75,7 @@ public class DaoTest extends TestCase {
             session.begin();
             try {
                 session.executeNativeSql("drop table if exists jpa_user");
-                session.executeNativeSql("create table if not exists jpa_user (id varchar(50) primary key, name varchar(500), test_age int(11), random_number int(11))");
+                session.executeNativeSql("create table if not exists jpa_user (id varchar(50) primary key, name varchar(500), test_age bigint, random_number bigint)");
                 session.startBatch();
                 try {
                     for (int i = 0; i < 10; ++i) {
@@ -88,7 +110,7 @@ public class DaoTest extends TestCase {
             session.begin();
             try {
                 session.executeNativeSql("drop table if exists jpa_user");
-                session.executeNativeSql("create table if not exists jpa_user (id varchar(50) primary key, name varchar(500), test_age int(11), random_number int(11))");
+                session.executeNativeSql("create table if not exists jpa_user (id varchar(50) primary key, name varchar(500), test_age bigint, random_number bigint)");
                 for (int i = 0; i < 10; ++i) {
                     User user = new User();
                     user.setName("test_user_" + UUID.randomUUID().toString());

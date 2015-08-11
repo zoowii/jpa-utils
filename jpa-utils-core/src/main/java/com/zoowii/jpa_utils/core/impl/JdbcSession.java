@@ -40,7 +40,7 @@ public class JdbcSession extends AbstractSession {
     private java.sql.Connection jdbcConnection;
     private JdbcSessionFactory jdbcSessionFactory;
     private AtomicBoolean activeFlag = new AtomicBoolean(false);
-    private SqlMapper sqlMapper = new MySQLMapper(); // FIXME
+    private SqlMapper sqlMapper = new MySQLMapper();
     private transient boolean isInBatch = false;
     private transient NamedParameterStatement batchPreparedStatement;
     private transient boolean closed = false;
@@ -78,6 +78,10 @@ public class JdbcSession extends AbstractSession {
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
         }
+    }
+
+    public void setSqlMapper(SqlMapper sqlMapper) {
+        this.sqlMapper = sqlMapper;
     }
 
     @Override

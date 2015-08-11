@@ -4,12 +4,11 @@ package com.zoowii.jpa_utils.core;
  * Created by zoowii on 14-12-23.
  */
 public interface SessionFactory {
+    Session getThreadScopeSession();
 
-    public Session getThreadScopeSession();
+    Session currentSession();
 
-    public Session currentSession();
+    abstract Session createSession();
 
-    public abstract Session createSession();
-
-    public abstract void close();
+    abstract void close();
 }
