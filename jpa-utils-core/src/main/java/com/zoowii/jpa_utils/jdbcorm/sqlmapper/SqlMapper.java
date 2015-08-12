@@ -1,16 +1,14 @@
 package com.zoowii.jpa_utils.jdbcorm.sqlmapper;
 
 import com.google.common.base.Function;
+import com.zoowii.jpa_utils.annotations.Jsonb;
+import com.zoowii.jpa_utils.builders.SqlDataBuilder;
 import com.zoowii.jpa_utils.core.IWrappedQuery;
-import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.SqlStatementInfo;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
-import com.zoowii.jpa_utils.util.FieldAccessor;
-import com.zoowii.jpa_utils.util.IncrementCircleNumber;
-import com.zoowii.jpa_utils.util.ListUtil;
-import com.zoowii.jpa_utils.util.StringUtil;
+import com.zoowii.jpa_utils.util.*;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -95,7 +93,8 @@ public abstract class SqlMapper {
         if (propertyCls.isArray() && (propertyCls.getComponentType() == Byte.class || propertyCls.getComponentType().getName().equals("byte"))) {
             return getOfBytes(isLob);
         }
-        throw new JdbcRuntimeException("Can't find sql column type of column type " + propertyCls.getName());
+        Logger.debug("Can't find sql column type of column type " + propertyCls.getName());
+        return "object";
     }
 
     /**
@@ -161,8 +160,14 @@ public abstract class SqlMapper {
             public Object apply(Pair<String, String> pair) {
                 FieldAccessor fieldAccessor = new FieldAccessor(modelMeta.getModelCls(), pair.getLeft());
                 String key = String.format("%s%s", pair.getLeft(), incrementCircleNumber.getAndIncrement() + "");
-                parameterBindings.addBinding(key, fieldAccessor.getProperty(entity));
-                columnSetPairs.add(String.format("%s = :%s", pair.getRight(), key));
+                Object propertyValue = fieldAccessor.getProperty(entity);
+                parameterBindings.addBinding(key, SqlDataBuilder.getDataForSqlWrite(fieldAccessor, entity, propertyValue));
+                // FIXME: abstract this hack
+                if (fieldAccessor.getPropertyAnnotation(Jsonb.class) != null) {
+                    columnSetPairs.add(String.format("%s = CAST(:%s AS JSONB)", pair.getRight(), key));
+                } else {
+                    columnSetPairs.add(String.format("%s = :%s", pair.getRight(), key));
+                }
                 return null;
             }
         });
@@ -202,19 +207,22 @@ public abstract class SqlMapper {
             columnNameAndSqlNames.add(Pair.of(columnMeta.fieldName, columnSql));
         }
         ParameterBindings parameterBindings = new ParameterBindings();
+        List<String> valueBindingSqlList = new ArrayList<String>();
         for (Pair<String, String> columnNameAndSqlName : columnNameAndSqlNames) {
             String fieldName = columnNameAndSqlName.getLeft();
             FieldAccessor fieldAccessor = new FieldAccessor(modelMeta.getModelCls(), fieldName);
+            Object propertyValue = fieldAccessor.getProperty(entity);
 //            parameterBindings.addIndexBinding(fieldAccessor.getProperty(entity));
-            parameterBindings.addBinding(fieldName, fieldAccessor.getProperty(entity));
+            parameterBindings.addBinding(fieldName, SqlDataBuilder.getDataForSqlWrite(fieldAccessor, entity, propertyValue));
+            // FIXME: abstract this hack
+            if (fieldAccessor.getPropertyAnnotation(Jsonb.class) != null) {
+                valueBindingSqlList.add(String.format("CAST(:%s AS JSONB)", fieldName));
+            } else {
+                valueBindingSqlList.add(String.format(":%s", fieldName));
+            }
         }
         String columnsSql = getColumnsSql(modelMeta, null, includeId);
-        String valuesBindingSql = StringUtil.join(ListUtil.map(columnNameAndSqlNames, new Function<Pair<String, String>, String>() {
-            @Override
-            public String apply(Pair<String, String> pair) {
-                return String.format(":%s", pair.getLeft());
-            }
-        }), ",");
+        String valuesBindingSql = StringUtil.join(valueBindingSqlList, ",");
         String sql = String.format("INSERT INTO %s ( %s ) VALUES ( %s )", tableFullName, columnsSql, valuesBindingSql);
         return SqlStatementInfo.of(sql, parameterBindings);
     }

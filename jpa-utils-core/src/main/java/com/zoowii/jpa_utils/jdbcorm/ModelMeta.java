@@ -38,6 +38,9 @@ public class ModelMeta {
         Field[] fields = modelCls.getDeclaredFields();
         Set<ModelColumnMeta> columnMetas = new HashSet<ModelColumnMeta>();
         for (Field field : fields) {
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
             FieldAccessor fieldAccessor = new FieldAccessor(modelCls, field.getName());
             if (fieldAccessor.getPropertyAnnotation(Transient.class) != null) {
                 continue;

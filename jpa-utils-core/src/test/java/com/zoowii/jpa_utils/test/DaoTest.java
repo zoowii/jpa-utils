@@ -6,6 +6,7 @@ import com.zoowii.jpa_utils.core.impl.JdbcSessionFactory;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.PgSQLMapper;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
+import com.zoowii.jpa_utils.test.models.TestJsonb;
 import com.zoowii.jpa_utils.test.models.User;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.StringUtil;
@@ -16,9 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class DaoTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(DaoTest.class);
@@ -176,6 +175,43 @@ public class DaoTest extends TestCase {
             }
         } catch (Exception e) {
             LOG.error("test jdbc error", e);
+        }
+    }
+
+    public void testPgsqlFeatures() {
+        if (true) {
+            return;
+        }
+        JdbcSessionFactory sessionFactory = getPgsqlJdbcTestSessionFactory();
+        try {
+            JdbcSession session = (JdbcSession) sessionFactory.createSession().asThreadLocal();
+            session.begin();
+            try {
+                session.executeNativeSql("drop table if exists test_jsonb");
+                session.executeNativeSql("create table if not exists test_jsonb (id varchar(50) primary key, name varchar(255), tags jsonb)");
+                TestJsonb testRecord1 = new TestJsonb();
+                testRecord1.setId(UUID.randomUUID().toString());
+                testRecord1.setName("test_name_" + testRecord1.getId());
+                Map<String, Object> testTags = new HashMap<String, Object>();
+                testTags.put("country", "China");
+                testTags.put("age", 24);
+                testTags.put("colors", ListUtil.seq("red", "green"));
+                testRecord1.setTags(testTags);
+                testRecord1.save();
+                List<String> countries = TestJsonb.getSession().findListByRawQuery(String.class, "select distinct tags->>'country' as country from test_jsonb");
+                Assert.assertEquals(countries.size(), 1);
+                testRecord1.setName("test2");
+                testTags.put("country", "America");
+                testRecord1.update();
+                session.commit();
+            } catch (Exception e) {
+                e.printStackTrace();
+                session.rollback();
+            } finally {
+                session.close();
+            }
+        } catch (Exception e) {
+            LOG.error("test pgsql jdbc error", e);
         }
     }
 }
