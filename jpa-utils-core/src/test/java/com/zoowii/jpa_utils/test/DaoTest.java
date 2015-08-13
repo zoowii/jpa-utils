@@ -1,5 +1,6 @@
 package com.zoowii.jpa_utils.test;
 
+import com.alibaba.fastjson.JSONArray;
 import com.google.common.base.Function;
 import com.zoowii.jpa_utils.core.impl.JdbcSession;
 import com.zoowii.jpa_utils.core.impl.JdbcSessionFactory;
@@ -203,6 +204,8 @@ public class DaoTest extends TestCase {
                 testRecord1.setName("test2");
                 testTags.put("country", "America");
                 testRecord1.update();
+                TestJsonb testJsonb2 = TestJsonb.find.byId(testRecord1.getId());
+                assertEquals(((JSONArray) testJsonb2.getTags().get("colors")).get(1), "green");
                 session.commit();
             } catch (Exception e) {
                 e.printStackTrace();

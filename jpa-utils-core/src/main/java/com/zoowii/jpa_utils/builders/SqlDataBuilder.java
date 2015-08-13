@@ -4,9 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.zoowii.jpa_utils.annotations.Jsonb;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.util.FieldAccessor;
+import org.apache.commons.lang3.reflect.MethodUtils;
 
 import javax.persistence.Column;
-import java.lang.reflect.Method;
 
 /**
  * Created by zoowii on 2015/8/13.
@@ -35,10 +35,8 @@ public class SqlDataBuilder {
                 String jsonText = JSON.toJSONString(propertyValue);
                 Object pgObject = pgObjectCls.newInstance();
                 // TODO: cache this method call or direct use PGobject by injection
-                Method setValueMethod = pgObjectCls.getDeclaredMethod("setValue", String.class);
-                Method setTypeMethod = pgObjectCls.getDeclaredMethod("setType", String.class);
-                setTypeMethod.invoke(pgObject, "text");
-                setValueMethod.invoke(pgObject, jsonText);
+                MethodUtils.invokeMethod(pgObject, "setType", "text");
+                MethodUtils.invokeMethod(pgObject, "setValue", jsonText);
                 return pgObject;
             } catch (Exception e) {
                 throw new JdbcRuntimeException(e);
