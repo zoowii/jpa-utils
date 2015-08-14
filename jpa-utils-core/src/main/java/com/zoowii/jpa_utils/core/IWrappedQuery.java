@@ -9,21 +9,25 @@ import java.util.List;
  * Created by zoowii on 14-12-23.
  */
 public interface IWrappedQuery {
-    public IWrappedQuery setParameter(int index, Object value);
+    IWrappedQuery setParameter(int index, Object value);
 
-    public IWrappedQuery setParameter(String key, Object value);
+    IWrappedQuery setParameter(String key, Object value);
 
-    public IWrappedQuery setMaxResults(int limit);
+    IWrappedQuery setParameter(int index, Object value, int sqlType);
 
-    public IWrappedQuery setMaxResults(Session session, ParameterBindings parameterBindings, int limit);
+    IWrappedQuery setParameter(String key, Object value, int sqlType);
 
-    public IWrappedQuery setFirstResult(int offset);
+    IWrappedQuery setMaxResults(int limit);
 
-    public IWrappedQuery setFirstResult(Session session, ParameterBindings parameterBindings, int offset);
+    IWrappedQuery setMaxResults(Session session, ParameterBindings parameterBindings, int limit);
 
-    public List getResultList();
+    IWrappedQuery setFirstResult(int offset);
 
-    public Object getSingleResult();
+    IWrappedQuery setFirstResult(Session session, ParameterBindings parameterBindings, int offset);
 
-    public int executeUpdate();
+    List getResultList();
+
+    Object getSingleResult();
+
+    int executeUpdate();
 }

@@ -9,6 +9,7 @@ import com.zoowii.jpa_utils.jdbcorm.NamedParameterStatement;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.util.Logger;
 import org.apache.commons.dbutils.ResultSetHandler;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -53,6 +54,26 @@ public class JdbcQuery implements IWrappedTypedQuery {
     public IWrappedQuery setParameter(String key, Object value) {
         try {
             namedParameterStatement.setObject(key, value);
+            return new JdbcQuery(sql, namedParameterStatement, modelMeta);
+        } catch (SQLException e) {
+            throw new JdbcRuntimeException(e);
+        }
+    }
+
+    @Override
+    public IWrappedQuery setParameter(int index, Object value, int sqlType) {
+        try {
+            namedParameterStatement.getStatement().setObject(index, value, sqlType);
+            return new JdbcQuery(sql, namedParameterStatement, modelMeta);
+        } catch (SQLException e) {
+            throw new JdbcRuntimeException(e);
+        }
+    }
+
+    @Override
+    public IWrappedQuery setParameter(String key, Object value, int sqlType) {
+        try {
+            namedParameterStatement.setObject(key, value, sqlType);
             return new JdbcQuery(sql, namedParameterStatement, modelMeta);
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);

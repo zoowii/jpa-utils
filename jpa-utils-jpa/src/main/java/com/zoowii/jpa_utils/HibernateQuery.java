@@ -29,6 +29,16 @@ public class HibernateQuery implements IWrappedTypedQuery {
     }
 
     @Override
+    public IWrappedQuery setParameter(int index, Object value, int sqlType) {
+        return new HibernateQuery(originQuery.setParameter(index, value));
+    }
+
+    @Override
+    public IWrappedQuery setParameter(String key, Object value, int sqlType) {
+        return new HibernateQuery(originQuery.setParameter(key, value));
+    }
+
+    @Override
     public IWrappedQuery setMaxResults(int limit) {
         return new HibernateQuery(originQuery.setMaxResults(limit));
     }

@@ -1,12 +1,6 @@
 package com.zoowii.jpa_utils.jdbcorm;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -189,6 +183,13 @@ public class NamedParameterStatement {
         int[] indexes = getIndexes(name);
         for (int i = 0; i < indexes.length; i++) {
             statement.setObject(indexes[i], value);
+        }
+    }
+
+    public void setObject(String name, Object value, int sqlType) throws SQLException {
+        int[] indexes = getIndexes(name);
+        for (int i = 0; i < indexes.length; i++) {
+            statement.setObject(indexes[i], value, sqlType);
         }
     }
 

@@ -1,7 +1,6 @@
 package com.zoowii.jpa_utils.core.impl;
 
 import com.zoowii.jpa_utils.core.IWrappedQuery;
-import com.zoowii.jpa_utils.core.IWrappedTypedQuery;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 
@@ -25,6 +24,16 @@ public class EntityQuery implements IWrappedQuery {
 
     @Override
     public IWrappedQuery setParameter(String key, Object value) {
+        return new EntityQuery(originQuery.setParameter(key, value));
+    }
+
+    @Override
+    public IWrappedQuery setParameter(int index, Object value, int sqlType) {
+        return new EntityQuery(originQuery.setParameter(index, value));
+    }
+
+    @Override
+    public IWrappedQuery setParameter(String key, Object value, int sqlType) {
         return new EntityQuery(originQuery.setParameter(key, value));
     }
 

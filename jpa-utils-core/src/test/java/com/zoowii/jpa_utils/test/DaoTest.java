@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.google.common.base.Function;
 import com.zoowii.jpa_utils.core.impl.JdbcSession;
 import com.zoowii.jpa_utils.core.impl.JdbcSessionFactory;
+import com.zoowii.jpa_utils.enums.SqlTypes;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.PgSQLMapper;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
@@ -206,6 +207,17 @@ public class DaoTest extends TestCase {
                 testRecord1.update();
                 TestJsonb testJsonb2 = TestJsonb.find.byId(testRecord1.getId());
                 assertEquals(((JSONArray) testJsonb2.getTags().get("colors")).get(1), "green");
+                List<String> countriesBySelect = TestJsonb.find.where().select("distinct tags->>'country'", "country").allSelected(String.class);
+                String countryBySelectForTestRecord1 = TestJsonb.find.where().eq("id", testRecord1.getId())
+                        .select("tags->>'country'", "country").firstSelected(String.class);
+                String countryBySelectForComplexQuery = TestJsonb.find.where().eq("tags#>'{colors}'", "[\"red\", \"green\"]", SqlTypes.JSONB)
+                        .select("tags->>'country'", "country").firstSelected(String.class);
+                String countryBySelectForComplexQuery2 = TestJsonb.find.where().eq("tags#>>'{colors,0}'", "red")
+                        .select("tags->>'country'", "country").firstSelected(String.class);
+                Assert.assertEquals(countriesBySelect.get(0), "America");
+                Assert.assertEquals(countryBySelectForTestRecord1, "America");
+                Assert.assertEquals(countryBySelectForComplexQuery, "America");
+                Assert.assertEquals(countryBySelectForComplexQuery2, "America");
                 session.commit();
             } catch (Exception e) {
                 e.printStackTrace();

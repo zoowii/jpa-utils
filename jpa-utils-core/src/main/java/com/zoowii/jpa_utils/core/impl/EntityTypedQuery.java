@@ -29,6 +29,16 @@ public class EntityTypedQuery implements IWrappedTypedQuery {
     }
 
     @Override
+    public IWrappedQuery setParameter(int index, Object value, int sqlType) {
+        return new EntityTypedQuery(originTypedQuery.setParameter(index, value));
+    }
+
+    @Override
+    public IWrappedQuery setParameter(String key, Object value, int sqlType) {
+        return new EntityTypedQuery(originTypedQuery.setParameter(key, value));
+    }
+
+    @Override
     public IWrappedQuery setMaxResults(int limit) {
         return new EntityTypedQuery(originTypedQuery.setMaxResults(limit));
     }

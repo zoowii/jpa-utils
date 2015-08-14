@@ -1,13 +1,12 @@
 package com.zoowii.jpa_utils.query;
 
-import com.zoowii.jpa_utils.jdbcorm.sqlmapper.ORMSqlMapper;
+import com.zoowii.jpa_utils.enums.SqlTypes;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.util.ListUtil;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Expr {
     public static final String EQ = "=";
@@ -23,12 +22,30 @@ public class Expr {
     protected String op = null;
     protected List<Object> items = new ArrayList<Object>();
 
+    public static final String JSONB_CAST_TMPL = "CAST(%s AS JSONB)";
+
+    /**
+     * the operators in the sql may need wrapped like CAST(? AS JSONB), the wrapper is String.format template, eg. CAST(%s AS JSONB)
+     */
+    private String op1Wrapper = null;
+    private String op2Wrapper = null;
+
     public Expr() {
     }
 
     public Expr(String op, List<Object> items) {
         this.op = op;
         this.items = items;
+    }
+
+    public Expr setOp1Wrapper(String wrapper) {
+        this.op1Wrapper = wrapper;
+        return this;
+    }
+
+    public Expr setOp2Wrapper(String wrapper) {
+        this.op2Wrapper = wrapper;
+        return this;
     }
 
     public static class EmptyExpr extends Expr {
@@ -43,59 +60,113 @@ public class Expr {
     }
 
     public static Expr createEQ(String name, Object value) {
-        return new Expr(EQ, ListUtil.seq(name, value));
+        return createEQ(name, value, SqlTypes.ANY);
+    }
+
+    public static Expr createEQ(String name, Object value, int sqlType) {
+        return new Expr(EQ, ListUtil.seq(name, value)).setOp2Wrapper(sqlType == SqlTypes.JSONB ? JSONB_CAST_TMPL : null);
     }
 
     public Expr eq(String name, Object value) {
-        return createAND(this, createEQ(name, value));
+        return eq(name, value, SqlTypes.ANY);
+    }
+
+    public Expr eq(String name, Object value, int sqlType) {
+        return createAND(this, createEQ(name, value, sqlType));
     }
 
     public static Expr createNE(String name, Object value) {
-        return new Expr(NE, ListUtil.seq(name, value));
+        return createNE(name, value, SqlTypes.ANY);
+    }
+
+    public static Expr createNE(String name, Object value, int sqlType) {
+        return new Expr(NE, ListUtil.seq(name, value)).setOp2Wrapper(sqlType == SqlTypes.JSONB ? JSONB_CAST_TMPL : null);
     }
 
     public Expr ne(String name, Object value) {
-        return createAND(this, createNE(name, value));
+        return ne(name, value, SqlTypes.ANY);
+    }
+
+    public Expr ne(String name, Object value, int sqlType) {
+        return createAND(this, createNE(name, value, sqlType));
     }
 
     public static Expr createLT(String name, Object value) {
-        return new Expr(LT, ListUtil.seq(name, value));
+        return createLT(name, value, SqlTypes.ANY);
+    }
+
+    public static Expr createLT(String name, Object value, int sqlType) {
+        return new Expr(LT, ListUtil.seq(name, value)).setOp2Wrapper(sqlType == SqlTypes.JSONB ? JSONB_CAST_TMPL : null);
     }
 
     public Expr lt(String name, Object value) {
-        return createAND(this, createLT(name, value));
+        return lt(name, value, SqlTypes.ANY);
+    }
+
+    public Expr lt(String name, Object value, int sqlType) {
+        return createAND(this, createLT(name, value, sqlType));
     }
 
     public static Expr createLE(String name, Object value) {
-        return new Expr(LE, ListUtil.seq(name, value));
+        return createLE(name, value, SqlTypes.ANY);
     }
 
+    public static Expr createLE(String name, Object value, int sqlType) {
+        return new Expr(LE, ListUtil.seq(name, value)).setOp2Wrapper(sqlType == SqlTypes.JSONB ? JSONB_CAST_TMPL : null);
+    }
     public Expr le(String name, Object value) {
-        return createAND(this, createLE(name, value));
+        return le(name, value, SqlTypes.ANY);
+    }
+
+    public Expr le(String name, Object value, int sqlType) {
+        return createAND(this, createLE(name, value, sqlType));
     }
 
     public static Expr createGT(String name, Object value) {
-        return new Expr(GT, ListUtil.seq(name, value));
+        return createGT(name, value, SqlTypes.ANY);
+    }
+
+    public static Expr createGT(String name, Object value, int sqlType) {
+        return new Expr(GT, ListUtil.seq(name, value)).setOp2Wrapper(sqlType == SqlTypes.JSONB ? JSONB_CAST_TMPL : null);
     }
 
     public Expr gt(String name, Object value) {
-        return createAND(this, createGT(name, value));
+        return gt(name, value, SqlTypes.ANY);
     }
 
+    public Expr gt(String name, Object value, int sqlType) {
+        return createAND(this, createGT(name, value, sqlType));
+    }
     public static Expr createGE(String name, Object value) {
-        return new Expr(GE, ListUtil.seq(name, value));
+        return createGE(name, value, SqlTypes.ANY);
     }
 
-    public Expr like(String name, Object value) {
-        return createLIKE(name, value);
-    }
-
-    public static Expr createLIKE(String name, Object value) {
-        return new Expr(LIKE, ListUtil.seq(name, value));
+    public static Expr createGE(String name, Object value, int sqlType) {
+        return new Expr(GE, ListUtil.seq(name, value)).setOp2Wrapper(sqlType == SqlTypes.JSONB ? JSONB_CAST_TMPL : null);
     }
 
     public Expr ge(String name, Object value) {
-        return createAND(this, createGE(name, value));
+        return ge(name, value, SqlTypes.ANY);
+    }
+
+    public Expr ge(String name, Object value, int sqlType) {
+        return createAND(this, createGE(name, value, sqlType));
+    }
+
+    public Expr like(String name, Object value) {
+        return like(name, value, SqlTypes.ANY);
+    }
+
+    public Expr like(String name, Object value, int sqlType) {
+        return createLIKE(name, value, sqlType);
+    }
+
+    public static Expr createLIKE(String name, Object value) {
+        return createLIKE(name, value, SqlTypes.ANY);
+    }
+
+    public static Expr createLIKE(String name, Object value, int sqlType) {
+        return new Expr(LIKE, ListUtil.seq(name, value)).setOp2Wrapper(sqlType == SqlTypes.JSONB ? JSONB_CAST_TMPL : null);
     }
 
     public static Expr createOR(Expr left, Expr right) {
@@ -155,7 +226,9 @@ public class Expr {
             return new QueryInfo(queryStr, new ParameterBindings());
         }
         ParameterBindings bindings = new ParameterBindings();
-        String queryStr = sqlMapper.getOpConditionSubSql(op, query.getSession().getEntityMetaOfClass(query.cls), items.get(0), items.get(1), bindings, null);
+        Object item1 = items.get(0);
+        Object item2 = items.get(1);
+        String queryStr = sqlMapper.getOpConditionSubSql(op, query.getSession().getEntityMetaOfClass(query.cls), item1, item2, op1Wrapper, op2Wrapper, bindings, null);
 //        String placement = sqlMapper.getNewParameterVar(bindings, "var", items.get(1)).getRight();
 //        String queryStr = items.get(0) + " " + op + " " + placement;
         return new QueryInfo(queryStr, bindings);

@@ -14,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * map java orm model's property types to sql column types
@@ -232,11 +233,19 @@ public abstract class SqlMapper {
     }
 
     public String getOpConditionSubSql(String op, ModelMeta modelMeta, Object left, Object value, ParameterBindings parameterBindings, String tableAlias) {
+        return getOpConditionSubSql(op, modelMeta, left, value, null, null, parameterBindings, tableAlias);
+    }
+
+    public String getOpConditionSubSql(String op, ModelMeta modelMeta, Object left, Object value, String leftWrapperTmpl, String valueWrapperTmpl, ParameterBindings parameterBindings, String tableAlias) {
         ModelMeta.ModelColumnMeta columnMeta = modelMeta.getColumnMetaByFieldName(left.toString());
         if (columnMeta == null) {
             String key = "var_" + incrementCircleNumber.getAndIncrement();
             parameterBindings.addBinding(key, value);
-            return String.format(" (%s %s :%s)", left, op, key);
+            key = ":" + key;
+            if (!StringUtil.isEmpty(valueWrapperTmpl)) {
+                key = String.format(valueWrapperTmpl, key);
+            }
+            return String.format(" (%s %s %s)", left, op, key);
         }
         String columnName = columnMeta.columnName;
         String finalTable = tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName);
@@ -254,7 +263,11 @@ public abstract class SqlMapper {
         }
         String key = left.toString() + incrementCircleNumber.getAndIncrement();
         parameterBindings.addBinding(key, value);
-        return String.format(" (%s %s :%s) ", finalTable, op, key);
+        key = ":" + key;
+        if (!StringUtil.isEmpty(valueWrapperTmpl)) {
+            key = String.format(valueWrapperTmpl, key);
+        }
+        return String.format(" (%s %s %s) ", finalTable, op, key);
     }
 
     public String getEqConditionSubSql(ModelMeta modelMeta, Object fieldName, Object value, ParameterBindings parameterBindings, String tableAlias) {
@@ -304,6 +317,22 @@ public abstract class SqlMapper {
             return " SELECT * " + sql;
         } else {
             return sql;
+        }
+    }
+
+    public String wrapQueryWithSelect(ModelMeta modelMeta, String sql, Map<String, String> selectColumns) {
+        if (selectColumns == null || selectColumns.size() < 1) {
+            return wrapQueryWithDefaultSelect(modelMeta, sql);
+        } else {
+            if (sql.trim().toUpperCase().startsWith("FROM".toUpperCase())) {
+                List<String> subItems = new ArrayList<String>();
+                for (String property : selectColumns.keySet()) {
+                    subItems.add(String.format("%s AS %s", property, selectColumns.get(property)));
+                }
+                return " SELECT " + StringUtil.join(subItems, ",") + " " + sql;
+            } else {
+                return sql;
+            }
         }
     }
 

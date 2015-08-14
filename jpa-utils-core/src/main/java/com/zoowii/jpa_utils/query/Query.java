@@ -2,13 +2,12 @@ package com.zoowii.jpa_utils.query;
 
 import com.google.common.base.Function;
 import com.zoowii.jpa_utils.core.IWrappedQuery;
-import com.zoowii.jpa_utils.core.IWrappedTypedQuery;
 import com.zoowii.jpa_utils.core.Session;
+import com.zoowii.jpa_utils.enums.SqlTypes;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.util.ListUtil;
-import com.zoowii.jpa_utils.util.ModelUtils;
 import com.zoowii.jpa_utils.util.StringUtil;
 import com.zoowii.jpa_utils.util.functions.Function2;
 
@@ -20,6 +19,7 @@ import java.util.Map;
 public class Query<M> {
     protected String tableName = null;
     protected Class<?> cls = null;
+    private Map<String, String> selectColumns = new HashMap<String, String>();
     protected List<OrderBy> orderBys = new ArrayList<OrderBy>();
     protected Expr condition = Expr.dummy();
     protected String _tableSymbol = null;
@@ -88,10 +88,36 @@ public class Query<M> {
         query._offset = this._offset;
         query._tableSymbol = this._tableSymbol;
         query.condition = this.condition;
-        query.orderBys = this.orderBys; // clone it
-        query.indexParameters = this.indexParameters; // clone it
-        query.mapParameters = this.mapParameters; // clone it
+        query.orderBys = this.orderBys; // FIXME: clone it
+        query.indexParameters = this.indexParameters; // FIXME: clone it
+        query.mapParameters = this.mapParameters; // FIXME: clone it
+        query.selectColumns = new HashMap<String, String>();
+        query.selectColumns.putAll(this.selectColumns);
         return query;
+    }
+
+    public Query<M> select(String property, String asProperty) {
+        SqlMapper sqlMapper = session.getSqlMapper();
+        ModelMeta modelMeta = session.getEntityMetaOfClass(cls);
+        ModelMeta.ModelColumnMeta modelColumnMeta = modelMeta.getColumnMetaByFieldName(property);
+        if (modelColumnMeta == null) {
+            this.selectColumns.put(property, asProperty);
+        } else {
+            this.selectColumns.put(sqlMapper.getSqlColumnNameWrapped(modelColumnMeta.columnName), asProperty);
+        }
+        return this;
+    }
+
+    public Query<M> select(String property) {
+        SqlMapper sqlMapper = session.getSqlMapper();
+        ModelMeta modelMeta = session.getEntityMetaOfClass(cls);
+        ModelMeta.ModelColumnMeta modelColumnMeta = modelMeta.getColumnMetaByFieldName(property);
+        if (modelColumnMeta == null) {
+            this.selectColumns.put(property, property);
+        } else {
+            this.selectColumns.put(sqlMapper.getSqlColumnNameWrapped(modelColumnMeta.columnName), modelColumnMeta.columnName);
+        }
+        return this;
     }
 
     public Query<M> setParameter(String key, Object value) {
@@ -105,7 +131,11 @@ public class Query<M> {
     }
 
     public Query<M> eq(String name, Object value) {
-        this.condition = this.condition.eq(name, value);
+        return eq(name, value, SqlTypes.ANY);
+    }
+
+    public Query<M> eq(String name, Object value, int sqlType) {
+        this.condition = this.condition.eq(name, value, sqlType);
         return this;
     }
     
@@ -294,7 +324,7 @@ public class Query<M> {
     public IWrappedQuery getTypedQuery(Session session, Class<?> model, Function<String, String> queryWrapper) {
         QueryInfo query = this.toQuery();
         String queryString = query.getQueryString();
-        queryString = session.getSqlMapper().wrapQueryWithDefaultSelect(session.getEntityMetaOfClass(model), queryString);
+        queryString = session.getSqlMapper().wrapQueryWithSelect(session.getEntityMetaOfClass(model), queryString, this.selectColumns);
         if (queryWrapper != null) {
             queryString = queryWrapper.apply(queryString);
         }
@@ -336,6 +366,14 @@ public class Query<M> {
         return getTypedQuery(session, model).getResultList();
     }
 
+    public <T> List<T> allSelected(Class<? extends T> model) {
+        return allSelected(session, model);
+    }
+
+    public <T> List<T> allSelected(Session session, Class<? extends T> model) {
+        return getTypedQuery(session, model).getResultList();
+    }
+
     public M first() {
         return first(session);
     }
@@ -347,6 +385,22 @@ public class Query<M> {
         return first(session, this.cls);
     }
 
+    public M first(Class<?> model) {
+        return first(Model.getSession(), model);
+    }
+
+    public M first(Session session, Class<?> model) {
+        return (M) ListUtil.first(getTypedQuery(session, model).setMaxResults(1).getResultList());
+    }
+
+    public <T> T firstSelected(Class<? extends T> model) {
+        return firstSelected(Model.getSession(), model);
+    }
+
+    public <T> T firstSelected(Session session, Class<? extends T> model) {
+        return (T) ListUtil.first(getTypedQuery(session, model).setMaxResults(1).getResultList());
+    }
+
     public M findUnique() {
         return findUnique(Model.getSession());
     }
@@ -355,12 +409,20 @@ public class Query<M> {
         return first(session);
     }
 
-    public M first(Class<?> model) {
-        return first(Model.getSession(), model);
+    public M findUnique(Class<?> model) {
+        return first(model);
     }
 
-    public M first(Session session, Class<?> model) {
-        return (M) ListUtil.first(getTypedQuery(session, model).setMaxResults(1).getResultList());
+    public M findUnique(Session session, Class<?> model) {
+        return first(session, model);
+    }
+
+    public <T> T findUniqueSelected(Class<? extends T> model) {
+        return firstSelected(model);
+    }
+
+    public <T> T findUniqueSelected(Session session, Class<? extends T> model) {
+        return firstSelected(session, model);
     }
 
     public M single(Class<?> model) {
