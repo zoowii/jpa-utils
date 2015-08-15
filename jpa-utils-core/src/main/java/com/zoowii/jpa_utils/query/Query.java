@@ -1,6 +1,7 @@
 package com.zoowii.jpa_utils.query;
 
 import com.google.common.base.Function;
+import com.zoowii.jpa_utils.builders.QuerySqlBuilder;
 import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.enums.SqlTypes;
@@ -222,6 +223,43 @@ public class Query<M> {
             }
         });
         return StringUtil.join(orderByStrs, ",");
+    }
+
+    public String where(String subQueryCondition) {
+        SqlMapper sqlMapper = session.getSqlMapper();
+        return sqlMapper.getWhereSubSql(subQueryCondition);
+    }
+
+    public String table() {
+        SqlMapper sqlMapper = session.getSqlMapper();
+        ModelMeta modelMeta = session.getEntityMetaOfClass(cls);
+        return sqlMapper.tableName(modelMeta);
+    }
+
+    public QueryInfo toWhereQueryInfo() {
+        SqlMapper sqlMapper = session.getSqlMapper();
+        return this.condition != null ? this.condition.toQueryString(sqlMapper, this) : null;
+    }
+
+    public int executeUpdateQueryInfo(QueryInfo queryInfo) {
+        return executeUpdateQueryInfo(queryInfo.getQueryString(), queryInfo.getParameterBindings());
+    }
+
+    public QuerySqlBuilder sqlBuilder() {
+        return new QuerySqlBuilder(this);
+    }
+
+    public int executeUpdateQueryInfo(String sql, ParameterBindings bindings) {
+        IWrappedQuery typedQuery = session.createQuery(sql);
+        if (bindings != null) {
+            for (int i = 0; i < bindings.getIndexBindings().size(); ++i) {
+                typedQuery = typedQuery.setParameter(i + session.getIndexParamBaseOrdinal(), bindings.getIndexBindings().get(i));
+            }
+            for (String key : bindings.getMapBindings().keySet()) {
+                typedQuery = typedQuery.setParameter(key, bindings.getMapBindings().get(key));
+            }
+        }
+        return typedQuery.executeUpdate();
     }
 
     public QueryInfo toQuery() {

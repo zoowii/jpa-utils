@@ -44,6 +44,13 @@ public class ParameterBindings {
         return mapBindings;
     }
 
+    public ParameterBindings extend(ParameterBindings other) {
+        ParameterBindings result = addAll(other);
+        this.indexBindings = result.indexBindings;
+        this.mapBindings = result.mapBindings;
+        return this;
+    }
+
     public ParameterBindings addAll(ParameterBindings other) {
         if (other == null) {
             return this;

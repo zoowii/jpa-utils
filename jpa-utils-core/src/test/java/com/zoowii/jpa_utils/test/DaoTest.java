@@ -8,6 +8,7 @@ import com.zoowii.jpa_utils.enums.SqlTypes;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.PgSQLMapper;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
+import com.zoowii.jpa_utils.query.Query;
 import com.zoowii.jpa_utils.test.models.TestJsonb;
 import com.zoowii.jpa_utils.test.models.User;
 import com.zoowii.jpa_utils.util.ListUtil;
@@ -207,7 +208,7 @@ public class DaoTest extends TestCase {
                 testRecord1.update();
                 TestJsonb testJsonb2 = TestJsonb.find.byId(testRecord1.getId());
                 assertEquals(((JSONArray) testJsonb2.getTags().get("colors")).get(1), "green");
-                List<String> countriesBySelect = TestJsonb.find.where().select("distinct tags->>'country'", "country").allSelected(String.class);
+                List<String> countriesBySelect = TestJsonb.find.where().select("distinct tags->>'country'", "country").limit(10).allSelected(String.class);
                 String countryBySelectForTestRecord1 = TestJsonb.find.where().eq("id", testRecord1.getId())
                         .select("tags->>'country'", "country").firstSelected(String.class);
                 String countryBySelectForComplexQuery = TestJsonb.find.where().eq("tags#>'{colors}'", "[\"red\", \"green\"]", SqlTypes.JSONB)
@@ -218,6 +219,16 @@ public class DaoTest extends TestCase {
                 Assert.assertEquals(countryBySelectForTestRecord1, "America");
                 Assert.assertEquals(countryBySelectForComplexQuery, "America");
                 Assert.assertEquals(countryBySelectForComplexQuery2, "America");
+                Query<TestJsonb> testJsonbQuery = TestJsonb.find.where().eq("tags#>>'{colors,0}'", "red");
+                // change pgsql's jsonb column will create new version each time, so just replace with new jsonb data, or you can create some pgsql functions to do this work
+                int queryInfoForManuallySql1Executed = testJsonbQuery.sqlBuilder()
+                        .update("name = :authorName").set("authorName", "zoowii").where().executeUpdate();
+                Assert.assertTrue(queryInfoForManuallySql1Executed > 0);
+                int deletedCountOfJsonbQuery = testJsonbQuery.sqlBuilder()
+                        .delete().where().executeUpdate();
+                Assert.assertTrue(deletedCountOfJsonbQuery > 0);
+                long remainingAfterDeleteOfJsonbQuery = testJsonbQuery.count();
+                Assert.assertEquals(remainingAfterDeleteOfJsonbQuery, 0);
                 session.commit();
             } catch (Exception e) {
                 e.printStackTrace();

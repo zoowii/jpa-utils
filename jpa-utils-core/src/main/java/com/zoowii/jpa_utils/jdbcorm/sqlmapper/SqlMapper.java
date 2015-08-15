@@ -118,9 +118,13 @@ public abstract class SqlMapper {
         return tableName;
     }
 
-    public Pair<String, String> getFromSubSql(ModelMeta modelMeta, boolean useAlias) {
-        String tableFullName = StringUtil.isEmpty(
+    public String tableName(ModelMeta modelMeta) {
+        return StringUtil.isEmpty(
                 modelMeta.getTableSchema()) ? getSqlTableNameWrapped(modelMeta.getTableName()) : String.format("%s.%s", modelMeta.getTableSchema(), getSqlTableNameWrapped(modelMeta.getTableName()));
+    }
+    
+    public Pair<String, String> getFromSubSql(ModelMeta modelMeta, boolean useAlias) {
+        String tableFullName = tableName(modelMeta);
         String tableAlias = useAlias ? String.format("%s_%s", modelMeta.getTableName(), incrementCircleNumber.getAndIncrement() + "").toUpperCase() : null;
         String fromSql = useAlias ? String.format(" FROM %s %s ", tableFullName, tableAlias) : String.format(" FROM %s ", tableFullName);
         return Pair.of(fromSql, tableAlias);
