@@ -1,7 +1,6 @@
 package com.zoowii.jpa_utils.query;
 
 import com.zoowii.jpa_utils.core.Session;
-import com.zoowii.jpa_utils.core.impl.EntitySession;
 import com.zoowii.jpa_utils.orm.Model;
 
 import java.util.List;
@@ -46,6 +45,14 @@ public class Finder<K, M> {
 
     public Query<M> where() {
         return new Query<M>(modelCls, Model.getSession());
+    }
+
+    public long count(Session session) {
+        return where(session).count();
+    }
+
+    public long count() {
+        return where().count();
     }
 
     public Query<M> where(Session session) {

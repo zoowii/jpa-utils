@@ -12,6 +12,7 @@ import com.zoowii.jpa_utils.query.Query;
 import com.zoowii.jpa_utils.test.models.TestJsonb;
 import com.zoowii.jpa_utils.test.models.User;
 import com.zoowii.jpa_utils.util.ListUtil;
+import com.zoowii.jpa_utils.util.ModelUtils;
 import com.zoowii.jpa_utils.util.StringUtil;
 import junit.framework.TestCase;
 import org.junit.Assert;
@@ -229,6 +230,8 @@ public class DaoTest extends TestCase {
                 Assert.assertTrue(deletedCountOfJsonbQuery > 0);
                 long remainingAfterDeleteOfJsonbQuery = testJsonbQuery.count();
                 Assert.assertEquals(remainingAfterDeleteOfJsonbQuery, 0);
+                TestJsonb.getSession().executeNativeSql(ModelUtils.findRawQuerySqlByName(TestJsonb.class, "insertWithDefaultTags"), new ParameterBindings(UUID.randomUUID().toString(), "test_name"));
+                Assert.assertTrue(TestJsonb.find.where().count() > 0);
                 session.commit();
             } catch (Exception e) {
                 e.printStackTrace();

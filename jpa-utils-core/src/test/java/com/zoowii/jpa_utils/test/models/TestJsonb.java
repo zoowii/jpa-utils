@@ -2,6 +2,8 @@ package com.zoowii.jpa_utils.test.models;
 
 import com.zoowii.jpa_utils.annotations.Jsonb;
 import com.zoowii.jpa_utils.annotations.NotNull;
+import com.zoowii.jpa_utils.annotations.QuerySql;
+import com.zoowii.jpa_utils.annotations.QuerySqls;
 import com.zoowii.jpa_utils.extension.ExtendFinder;
 import com.zoowii.jpa_utils.orm.Model;
 
@@ -16,6 +18,10 @@ import java.util.Map;
  */
 @Entity
 @Table(name = "test_jsonb")
+@QuerySqls(rawQueries = {
+        @QuerySql(name = "insertWithDefaultTags", value = "insert into test_jsonb (id, name, tags) values (?, ?, cast('{}' as jsonb))"),
+        @QuerySql(name = "selectCountries", value = "select distinct tags->>'country' as country from test_jsonb")
+})
 public class TestJsonb extends Model {
     public static final ExtendFinder<String, TestJsonb> find = new ExtendFinder<String, TestJsonb>(String.class, TestJsonb.class);
 
