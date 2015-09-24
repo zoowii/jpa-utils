@@ -60,4 +60,12 @@ public class ModelUtils {
         }
         return rawQueryMappings.get(name);
     }
+
+    public static Object tryNewInstanceForClass(Class<?> type) {
+        try {
+            return type.newInstance();
+        } catch (Exception e) {
+            return new RuntimeException(e);
+        }
+    }
 }
