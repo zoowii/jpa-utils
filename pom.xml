@@ -6,7 +6,7 @@
 
     <groupId>com.zoowii</groupId>
     <artifactId>jpa-utils</artifactId>
-    <version>1.9.21</version>
+    <version>1.9.21u1</version>
     <modules>
         <module>jpa-utils-core</module>
         <module>jpa-utils-jpa</module>

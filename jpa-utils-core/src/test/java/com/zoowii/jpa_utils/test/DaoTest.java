@@ -127,6 +127,8 @@ public class DaoTest extends TestCase {
                     }
                 }
                 List<User> users = session.findListByQuery(User.class, "select * from jpa_user");
+                List<User> usersFromLike = User.find.where(session).gt("test_age", 0).like("name", "%test%").gt("test_age", 0).offset(0).limit(10).all();
+                Assert.assertTrue(usersFromLike.size() > 0);
                 LOG.info("there are " + users.size() + " records now");
                 for (User user1 : users) {
                     user1.setName("updated_user_name_" + UUID.randomUUID().toString());

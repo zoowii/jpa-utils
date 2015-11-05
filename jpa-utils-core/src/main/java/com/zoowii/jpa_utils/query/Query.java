@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Query<M> {
     protected String tableName = null;
@@ -23,12 +25,13 @@ public class Query<M> {
     private Map<String, String> selectColumns = new HashMap<String, String>();
     protected List<OrderBy> orderBys = new ArrayList<OrderBy>();
     protected Expr condition = Expr.dummy();
-    protected String _tableSymbol = null;
+    protected transient String _tableSymbol = null;
     protected int _limit = -1;
     protected int _offset = -1;
     protected Map<Integer, Object> indexParameters = new HashMap<Integer, Object>();
     protected Map<String, Object> mapParameters = new HashMap<String, Object>();
     protected Session session;
+    private static AtomicLong generatedNameCount = new AtomicLong(0L);
 
     public Class<?> getModelClass() {
         return cls;
@@ -42,9 +45,13 @@ public class Query<M> {
         }
     }
 
+    public String generateRandomTableAliasName() {
+        return "table_alias_" + generatedNameCount.addAndGet(1);
+    }
+
     public String getTableSymbol() {
         if (_tableSymbol == null) {
-            _tableSymbol = StringUtil.randomString(5);
+            _tableSymbol = generateRandomTableAliasName();
         }
         return _tableSymbol;
     }
