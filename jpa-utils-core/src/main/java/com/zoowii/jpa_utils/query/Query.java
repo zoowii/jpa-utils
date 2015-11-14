@@ -32,6 +32,7 @@ public class Query<M> {
     protected Map<String, Object> mapParameters = new HashMap<String, Object>();
     protected Session session;
     private static AtomicLong generatedNameCount = new AtomicLong(0L);
+    private boolean useAlias = false;
 
     public Class<?> getModelClass() {
         return cls;
@@ -54,6 +55,14 @@ public class Query<M> {
             _tableSymbol = generateRandomTableAliasName();
         }
         return _tableSymbol;
+    }
+
+    public String getUsingTableSymbol() {
+        if(_tableSymbol != null) {
+            return _tableSymbol;
+        } else {
+            return getSession().getSqlMapper().tableName(getSession().getEntityMetaOfClass(cls));
+        }
     }
 
     /**
@@ -105,8 +114,8 @@ public class Query<M> {
     }
 
     public Query<M> select(String property, String asProperty) {
-        SqlMapper sqlMapper = session.getSqlMapper();
-        ModelMeta modelMeta = session.getEntityMetaOfClass(cls);
+        SqlMapper sqlMapper = getSession().getSqlMapper();
+        ModelMeta modelMeta = getSession().getEntityMetaOfClass(cls);
         ModelMeta.ModelColumnMeta modelColumnMeta = modelMeta.getColumnMetaByFieldName(property);
         if (modelColumnMeta == null) {
             this.selectColumns.put(property, asProperty);
@@ -117,8 +126,8 @@ public class Query<M> {
     }
 
     public Query<M> select(String property) {
-        SqlMapper sqlMapper = session.getSqlMapper();
-        ModelMeta modelMeta = session.getEntityMetaOfClass(cls);
+        SqlMapper sqlMapper = getSession().getSqlMapper();
+        ModelMeta modelMeta = getSession().getEntityMetaOfClass(cls);
         ModelMeta.ModelColumnMeta modelColumnMeta = modelMeta.getColumnMetaByFieldName(property);
         if (modelColumnMeta == null) {
             this.selectColumns.put(property, property);
@@ -162,6 +171,28 @@ public class Query<M> {
         return this;
     }
 
+    public Query<M> alias(String aliasTableName) {
+        this._tableSymbol = aliasTableName;
+        useAlias = true;
+        return this;
+    }
+
+    public Query<M> alias() {
+        getTableSymbol();
+        useAlias = true;
+        return this;
+    }
+
+    /**
+     * direct query sql string
+     * 在.gt(prop, Query.sql(...))等查询中,作为非parameter参数,而是直接并入到query sql中
+     * @param sql
+     * @return
+     */
+    public static DirectSql directSql(String sql) {
+        return new DirectSql(sql);
+    }
+
     public Query<M> ge(String name, Object value) {
         this.condition = this.condition.ge(name, value);
         return this;
@@ -179,6 +210,31 @@ public class Query<M> {
 
     public Query<M> le(String name, Object value) {
         this.condition = this.condition.le(name, value);
+        return this;
+    }
+
+    public Query<M> exists(Query<?> subQuery) {
+        this.condition = this.condition.exists(subQuery);
+        return this;
+    }
+
+    public Query<M> exists(String subQuery) {
+        this.condition = this.condition.exists(subQuery);
+        return this;
+    }
+
+    public Query<M> not(Expr expr) {
+        this.condition = this.condition.not(expr);
+        return this;
+    }
+
+    public Query<M> notExists(Query<?> subQuery) {
+        this.condition = this.condition.notExists(subQuery);
+        return this;
+    }
+
+    public Query<M> notExists(String subQuery) {
+        this.condition = this.condition.notExists(subQuery);
         return this;
     }
 
@@ -233,18 +289,18 @@ public class Query<M> {
     }
 
     public String where(String subQueryCondition) {
-        SqlMapper sqlMapper = session.getSqlMapper();
+        SqlMapper sqlMapper = getSession().getSqlMapper();
         return sqlMapper.getWhereSubSql(subQueryCondition);
     }
 
     public String table() {
-        SqlMapper sqlMapper = session.getSqlMapper();
-        ModelMeta modelMeta = session.getEntityMetaOfClass(cls);
+        SqlMapper sqlMapper = getSession().getSqlMapper();
+        ModelMeta modelMeta = getSession().getEntityMetaOfClass(cls);
         return sqlMapper.tableName(modelMeta);
     }
 
     public QueryInfo toWhereQueryInfo() {
-        SqlMapper sqlMapper = session.getSqlMapper();
+        SqlMapper sqlMapper = getSession().getSqlMapper();
         return this.condition != null ? this.condition.toQueryString(sqlMapper, this) : null;
     }
 
@@ -257,10 +313,10 @@ public class Query<M> {
     }
 
     public int executeUpdateQueryInfo(String sql, ParameterBindings bindings) {
-        IWrappedQuery typedQuery = session.createQuery(sql);
+        IWrappedQuery typedQuery = getSession().createQuery(sql);
         if (bindings != null) {
             for (int i = 0; i < bindings.getIndexBindings().size(); ++i) {
-                typedQuery = typedQuery.setParameter(i + session.getIndexParamBaseOrdinal(), bindings.getIndexBindings().get(i));
+                typedQuery = typedQuery.setParameter(i + getSession().getIndexParamBaseOrdinal(), bindings.getIndexBindings().get(i));
             }
             for (String key : bindings.getMapBindings().keySet()) {
                 typedQuery = typedQuery.setParameter(key, bindings.getMapBindings().get(key));
@@ -270,9 +326,9 @@ public class Query<M> {
     }
 
     public QueryInfo toQuery() {
-        SqlMapper sqlMapper = session.getSqlMapper();
-        ModelMeta modelMeta = session.getEntityMetaOfClass(cls);
-        String queryStr = sqlMapper.getFromSubSql(modelMeta, false).getLeft();
+        SqlMapper sqlMapper = getSession().getSqlMapper();
+        ModelMeta modelMeta = getSession().getEntityMetaOfClass(cls);
+        String queryStr = sqlMapper.getFromSubSql(modelMeta, useAlias, getUsingTableSymbol()).getLeft();
         QueryInfo exprQuery = this.condition != null ? this.condition.toQueryString(sqlMapper, this) : null;
         if (exprQuery != null) {
             queryStr += sqlMapper.getWhereSubSql(exprQuery.getQueryString());

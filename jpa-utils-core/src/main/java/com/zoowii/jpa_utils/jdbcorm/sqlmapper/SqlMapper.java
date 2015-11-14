@@ -6,6 +6,7 @@ import com.zoowii.jpa_utils.builders.SqlDataBuilder;
 import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.SqlStatementInfo;
+import com.zoowii.jpa_utils.query.DirectSql;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.util.*;
@@ -122,10 +123,17 @@ public abstract class SqlMapper {
         return StringUtil.isEmpty(
                 modelMeta.getTableSchema()) ? getSqlTableNameWrapped(modelMeta.getTableName()) : String.format("%s.%s", modelMeta.getTableSchema(), getSqlTableNameWrapped(modelMeta.getTableName()));
     }
-    
+
     public Pair<String, String> getFromSubSql(ModelMeta modelMeta, boolean useAlias) {
+        return getFromSubSql(modelMeta, useAlias, null);
+    }
+    
+    public Pair<String, String> getFromSubSql(ModelMeta modelMeta, boolean useAlias, String alias) {
         String tableFullName = tableName(modelMeta);
-        String tableAlias = useAlias ? String.format("%s_%s", modelMeta.getTableName(), incrementCircleNumber.getAndIncrement() + "").toUpperCase() : null;
+        if(useAlias && (alias == null || alias.isEmpty())) {
+            alias = String.format("%s_%s", modelMeta.getTableName(), incrementCircleNumber.getAndIncrement() + "").toUpperCase();
+        }
+        String tableAlias = useAlias ? alias : null;
         String fromSql = useAlias ? String.format(" FROM %s %s ", tableFullName, tableAlias) : String.format(" FROM %s ", tableFullName);
         return Pair.of(fromSql, tableAlias);
     }
@@ -244,16 +252,20 @@ public abstract class SqlMapper {
         ModelMeta.ModelColumnMeta columnMeta = modelMeta.getColumnMetaByFieldName(left.toString());
         if (columnMeta == null) {
             String key = "var_" + incrementCircleNumber.getAndIncrement();
-            parameterBindings.addBinding(key, value);
-            key = ":" + key;
-            if (!StringUtil.isEmpty(valueWrapperTmpl)) {
-                key = String.format(valueWrapperTmpl, key);
+            if(!(value instanceof DirectSql)) {
+                parameterBindings.addBinding(key, value);
+                key = ":" + key;
+                if (!StringUtil.isEmpty(valueWrapperTmpl)) {
+                    key = String.format(valueWrapperTmpl, key);
+                }
+            } else {
+                key = ((DirectSql)value).getSql();
             }
             return String.format(" (%s %s %s)", left, op, key);
         }
         String columnName = columnMeta.columnName;
         String finalTable = tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName);
-        if(Expr.IN.equals(op)) {
+        if(Expr.IN.equalsIgnoreCase(op)) {
             if(value instanceof List) {
                 List<Object> valueList = (List<Object>) value;
                 for(int i=0;i<valueList.size();++i) {
@@ -266,10 +278,14 @@ public abstract class SqlMapper {
             return String.format(" (%s %s (%s)) ", finalTable, op, value);
         }
         String key = left.toString() + incrementCircleNumber.getAndIncrement();
-        parameterBindings.addBinding(key, value);
-        key = ":" + key;
-        if (!StringUtil.isEmpty(valueWrapperTmpl)) {
-            key = String.format(valueWrapperTmpl, key);
+        if(!(value instanceof DirectSql)) {
+            parameterBindings.addBinding(key, value);
+            key = ":" + key;
+            if (!StringUtil.isEmpty(valueWrapperTmpl)) {
+                key = String.format(valueWrapperTmpl, key);
+            }
+        } else {
+            key = ((DirectSql) value).getSql();
         }
         return String.format(" (%s %s %s) ", finalTable, op, key);
     }

@@ -1,6 +1,7 @@
 package com.zoowii.jpa_utils.query;
 
 import com.zoowii.jpa_utils.enums.SqlTypes;
+import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.util.ListUtil;
 import org.apache.commons.lang3.NotImplementedException;
@@ -19,6 +20,8 @@ public class Expr {
     public static final String AND = "and";
     public static final String LIKE = "like";
     public static final String IN = "in";
+    public static final String EXISTS = "exists";
+    public static final String NOT = "not";
     protected String op = null;
     protected List<Object> items = new ArrayList<Object>();
 
@@ -185,6 +188,26 @@ public class Expr {
         return new Expr(IN, ListUtil.seq(property, value));
     }
 
+    public static Expr createExists(Query<?> subQuery) {
+        return new Expr(EXISTS, ListUtil.seq((Object)subQuery));
+    }
+
+    public static Expr createExists(String subQuery) {
+        return new Expr(EXISTS, ListUtil.seq((Object) subQuery));
+    }
+
+    public static Expr createNot(Expr expr) {
+        return new Expr(NOT, ListUtil.seq((Object) expr));
+    }
+
+    public static Expr createNotExists(Query<?> subQuery) {
+        return createNot(createExists(subQuery));
+    }
+
+    public static Expr createNotExists(String subQuery) {
+        return createNot(createExists(subQuery));
+    }
+
     public Expr and(Expr other) {
         return createAND(this, other);
     }
@@ -193,17 +216,45 @@ public class Expr {
         return createAND(this, createIN(property, value));
     }
 
+    public Expr exists(Query<?> subQuery) {
+        return createAND(this, createExists(subQuery));
+    }
+
+    public Expr exists(String subQuery) {
+        return createAND(this, createExists(subQuery));
+    }
+
+    public Expr not(Expr expr) {
+        return createAND(this, createNot(expr));
+    }
+
+    public Expr notExists(Query<?> subQuery) {
+        return createAND(this, createNotExists(subQuery));
+    }
+
+    public Expr notExists(String subQuery) {
+        return createAND(this, createNotExists(subQuery));
+    }
+
     /**
      * whether this expr is `is null` or `is not null` sub sql
      *
      * @return
      */
     private boolean isNullOrNotNullExpr() {
-        if (op.equals(EQ) || op.equals(NE)) {
+        if (op.equalsIgnoreCase(EQ) || op.equalsIgnoreCase(NE)) {
             return items.size() == 2 && items.get(1) == null;
         } else {
             return false;
         }
+    }
+
+    private boolean isNotExpr() {
+        return NOT.equalsIgnoreCase(op) && items.size() == 1 && items.get(0) instanceof Expr;
+    }
+
+    private boolean isExistsExpr() {
+        return EXISTS.equalsIgnoreCase(op) && items.size() == 1;
     }
 
     private static final List<String> NEED_PARSE_LEFT_COLUMN_OPS = ListUtil.seq(EQ,NE, GT, LT, LIKE, GE, LE, IN);
@@ -224,6 +275,21 @@ public class Expr {
             }
             String queryStr = item1 + " " + (op.equals(EQ) ? "is null" : "is not null");
             return new QueryInfo(queryStr, new ParameterBindings());
+        } else if(isNotExpr()) {
+            Expr item1 = (Expr) items.get(0);
+            QueryInfo subQueryInfo = item1.toQueryString(sqlMapper, query);
+            return new QueryInfo("NOT (" + subQueryInfo.getQueryString() + ")", subQueryInfo.getParameterBindings());
+        } else if(isExistsExpr()) {
+            if(items.get(0) instanceof Query) {
+                Query<?> item1 = (Query<?>) items.get(0);
+                QueryInfo subQueryInfo = item1.toQuery();
+                return new QueryInfo("EXISTS (SELECT 1 " + subQueryInfo.getQueryString() + ")", subQueryInfo.getParameterBindings());
+            } else if(items.get(0) != null) {
+                String item1 = items.get(0).toString();
+                return new QueryInfo("EXISTS (" + item1 + ")", new ParameterBindings());
+            } else {
+                throw new JdbcRuntimeException("exists null wrong query sql");
+            }
         }
         ParameterBindings bindings = new ParameterBindings();
         Object item1 = items.get(0);

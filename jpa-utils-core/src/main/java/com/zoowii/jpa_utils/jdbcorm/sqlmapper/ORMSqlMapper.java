@@ -74,8 +74,11 @@ public class ORMSqlMapper extends SqlMapper {
     }
 
     @Override
-    public Pair<String, String> getFromSubSql(ModelMeta modelMeta, boolean useAlias) {
-        String tableAlias = useAlias ? String.format("%s_%s", modelMeta.getModelCls().getSimpleName(), incrementCircleNumber.getAndIncrement() + "") : null;
+    public Pair<String, String> getFromSubSql(ModelMeta modelMeta, boolean useAlias, String alias) {
+        if(useAlias && (alias == null || alias.isEmpty())) {
+            alias = String.format("%s_%s", modelMeta.getModelCls().getSimpleName(), incrementCircleNumber.getAndIncrement() + "");
+        }
+        String tableAlias = useAlias ?  alias: null;
         String fromSql = useAlias ? String.format(" FROM %s %s ", modelMeta.getModelCls().getSimpleName(), tableAlias) : String.format(" FROM %s ", modelMeta.getModelCls().getSimpleName());
         return Pair.of(fromSql, tableAlias);
     }

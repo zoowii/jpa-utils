@@ -127,7 +127,8 @@ public class DaoTest extends TestCase {
                     }
                 }
                 List<User> users = session.findListByQuery(User.class, "select * from jpa_user");
-                List<User> usersFromLike = User.find.where(session).gt("test_age", 0).like("name", "%test%").gt("test_age", 0).offset(0).limit(10).all();
+                List<User> usersFromLike = User.find.where(session).gt("test_age", 0)
+                        .like("name", "%test%").gt("test_age", 0).offset(0).limit(10).all();
                 Assert.assertTrue(usersFromLike.size() > 0);
                 LOG.info("there are " + users.size() + " records now");
                 for (User user1 : users) {
@@ -155,6 +156,18 @@ public class DaoTest extends TestCase {
                         return user.getId();
                     }
                 });
+                Query<User> usersExceptMaxAgeQuery = User.find.where(session).alias();
+                usersExceptMaxAgeQuery = usersExceptMaxAgeQuery.exists(User.find.where(session)
+                        .gt("age", Query.directSql(usersExceptMaxAgeQuery.getUsingTableSymbol() + ".test_age")).limit(1));
+                List<User> usersExceptMaxAge = usersExceptMaxAgeQuery.all();
+                Assert.assertEquals(usersExceptMaxAge.size() + 1, users.size());
+                Query<User> maxAgeUsersQuery = User.find.where(session).alias();
+                maxAgeUsersQuery = maxAgeUsersQuery.notExists("select 1 from jpa_user u2 where u2.test_age > " + maxAgeUsersQuery.getUsingTableSymbol() + ".test_age limit 1");
+                List<User> maxAgeUsers = maxAgeUsersQuery.all();
+                Assert.assertEquals(maxAgeUsers.size(), 1);
+                for(User u : usersExceptMaxAge) {
+                    Assert.assertTrue(u.getAge() < maxAgeUsers.get(0).getAge());
+                }
                 List<User> usersFromIn = User.find.where(session).in("id", idsForInQuery).all();
                 assertTrue(usersFromIn.size() > 0);
                 List<User> usersFromInSubQuery = User.find.where(session).in("id", "select id from jpa_user limit 4").all();
