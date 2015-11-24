@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Query<M> {
@@ -31,8 +30,10 @@ public class Query<M> {
     protected Map<Integer, Object> indexParameters = new HashMap<Integer, Object>();
     protected Map<String, Object> mapParameters = new HashMap<String, Object>();
     protected Session session;
-    private static AtomicLong generatedNameCount = new AtomicLong(0L);
-    private boolean useAlias = false;
+    protected static AtomicLong generatedNameCount = new AtomicLong(0L);
+    protected boolean useAlias = false;
+    protected String extraSql = "";
+    protected String groupBySql = "";
 
     public Class<?> getModelClass() {
         return cls;
@@ -44,6 +45,29 @@ public class Query<M> {
         } else {
             return Model.getSession();
         }
+    }
+
+    public Query<M> setExtraSql(String sql) {
+        this.extraSql = sql != null ? sql : "";
+        return this;
+    }
+
+    public Query<M> setGroupBySql(String sql) {
+        this.groupBySql = sql != null ? sql : "";
+        return this;
+    }
+
+    public String getExtraSql() {
+        return extraSql;
+    }
+
+    public String getGroupBySql() {
+        return groupBySql;
+    }
+
+    public Query<M> setSession(Session session) {
+        this.session = session;
+        return this;
     }
 
     public String generateRandomTableAliasName() {
@@ -105,11 +129,19 @@ public class Query<M> {
         query._offset = this._offset;
         query._tableSymbol = this._tableSymbol;
         query.condition = this.condition;
-        query.orderBys = this.orderBys; // FIXME: clone it
-        query.indexParameters = this.indexParameters; // FIXME: clone it
-        query.mapParameters = this.mapParameters; // FIXME: clone it
+        query.orderBys = new ArrayList<OrderBy>();
+        query.orderBys.addAll(this.orderBys);
+        query.indexParameters = new HashMap<Integer, Object>();
+        query.indexParameters.putAll(this.indexParameters);
+        query.mapParameters = new HashMap<String, Object>();
+        query.mapParameters.putAll(this.mapParameters);
         query.selectColumns = new HashMap<String, String>();
         query.selectColumns.putAll(this.selectColumns);
+        query.cls = this.cls;
+        query.useAlias = this.useAlias;
+        query.session = this.session;
+        query.extraSql = this.extraSql;
+        query.groupBySql = this.groupBySql;
         return query;
     }
 
@@ -333,6 +365,7 @@ public class Query<M> {
         if (exprQuery != null) {
             queryStr += sqlMapper.getWhereSubSql(exprQuery.getQueryString());
         }
+        queryStr += this.groupBySql + " ";
         if (this.orderBys.size() > 0) {
             queryStr += sqlMapper.getOrderBySubSql(this.getOrderByString());
         }
@@ -347,6 +380,7 @@ public class Query<M> {
         if (this._offset >= 0) {
             extras.setOffset(this._offset);
         }
+        queryStr += extraSql;
         return new QueryInfo(queryStr, bindings, extras);
     }
 
