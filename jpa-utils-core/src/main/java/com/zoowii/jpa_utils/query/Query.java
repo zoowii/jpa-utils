@@ -11,6 +11,7 @@ import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.StringUtil;
 import com.zoowii.jpa_utils.util.functions.Function2;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ public class Query<M> {
     protected int _offset = -1;
     protected Map<Integer, Object> indexParameters = new HashMap<Integer, Object>();
     protected Map<String, Object> mapParameters = new HashMap<String, Object>();
+    protected List<JoinInfo> joinInfos = new ArrayList<JoinInfo>();
     protected Session session;
     protected static AtomicLong generatedNameCount = new AtomicLong(0L);
     protected boolean useAlias = false;
@@ -137,6 +139,8 @@ public class Query<M> {
         query.mapParameters.putAll(this.mapParameters);
         query.selectColumns = new HashMap<String, String>();
         query.selectColumns.putAll(this.selectColumns);
+        query.joinInfos = new ArrayList<JoinInfo>();
+        query.joinInfos.addAll(this.joinInfos);
         query.cls = this.cls;
         query.useAlias = this.useAlias;
         query.session = this.session;
@@ -167,6 +171,41 @@ public class Query<M> {
             this.selectColumns.put(sqlMapper.getSqlColumnNameWrapped(modelColumnMeta.columnName), modelColumnMeta.columnName);
         }
         return this;
+    }
+
+    public JoinInfo.Builder outJoin(String tableName, String tableAlias) {
+        return join(tableName, tableAlias, JoinInfo.OUT);
+    }
+
+    public JoinInfo.Builder rightJoin(String tableName, String tableAlias) {
+        return join(tableName, tableAlias, JoinInfo.RIGHT);
+    }
+
+    public JoinInfo.Builder leftJoin(String tableName, String tableAlias) {
+        return join(tableName, tableAlias, JoinInfo.LEFT);
+    }
+
+    public JoinInfo.Builder innerJoin(String tableName, String tableAlias) {
+        return join(tableName, tableAlias, JoinInfo.INNER);
+    }
+
+    public JoinInfo.Builder join(String tableName, String tableAlias) {
+        return join(tableName, tableAlias, JoinInfo.INNER);
+    }
+
+    public JoinInfo.Builder join(String tableName, String tableAlias, int joinType) {
+        if (StringUtil.isEmpty(tableAlias)) {
+            tableAlias = tableName;
+        }
+        if (StringUtil.isEmpty(tableName)) {
+            return new JoinInfo.Builder<M>(this, null);
+        }
+        JoinInfo joinInfo = new JoinInfo();
+        joinInfo.setType(joinType);
+        joinInfo.setJoinTableName(tableName);
+        joinInfo.setJoinTableAlias(tableAlias);
+        this.joinInfos.add(joinInfo);
+        return new JoinInfo.Builder<M>(this, joinInfo);
     }
 
     public Query<M> setParameter(String key, Object value) {
@@ -361,6 +400,18 @@ public class Query<M> {
         SqlMapper sqlMapper = getSession().getSqlMapper();
         ModelMeta modelMeta = getSession().getEntityMetaOfClass(cls);
         String queryStr = sqlMapper.getFromSubSql(modelMeta, useAlias, getUsingTableSymbol()).getLeft();
+        if (joinInfos.size() > 0) {
+            for (JoinInfo joinInfo : joinInfos) {
+                if (joinInfo.getJoinConditions().size() < 1) {
+                    continue;
+                }
+                String joinSql = " " + sqlMapper.getOfJoin(joinInfo) + " ";
+                for (Pair<String, String> joinCond : joinInfo.getJoinConditions()) {
+                    joinSql += " " + sqlMapper.getOfJoinOn(joinCond);
+                }
+                queryStr += joinSql + " ";
+            }
+        }
         QueryInfo exprQuery = this.condition != null ? this.condition.toQueryString(sqlMapper, this) : null;
         if (exprQuery != null) {
             queryStr += sqlMapper.getWhereSubSql(exprQuery.getQueryString());

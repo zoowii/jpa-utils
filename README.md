@@ -19,7 +19,8 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate) or direct hibernate
 * 查询的核心Finder类可以单独使用，直接使用到现有的使用JPA或Hibernate的代码中，只需要根据现有EntityManager/Session(hibernate)构造一个jpa-utils的session，然后使用Finder类来查询就好了
 * 支持类似MyBatis的执行编程式XML中的SQL(TODO)
 * 通过entity model类注解支持剥离部分SQL，比如@Query, @Sql, @SubSql, @Select, @Update, @Insert, @Delete等（DOING）
-* 通过query::select支持手动控制选择数据(已添加), 通过query::update支持对满足条件的记录执行update指定字段的操作(已添加), 通过query::join支持关联表查询(TODO)
+* 通过query::select支持手动控制选择数据, 通过query::update支持对满足条件的记录执行update指定字段的操作, 通过query::join支持关联表查询
+* union操作(TODO)
 * 提供一个底层为mongodb的provider,并实现SQL/HQL to MongoDB-API parser(TODO)
 * 支持PostgreSQL，目前只支持jsonb类型，不支持json,hstore等类型
 * 支持根据Query对象构造部分sql，然后使用时另外补全sql及其他参数

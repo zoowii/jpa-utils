@@ -186,6 +186,9 @@ public class DaoTest extends TestCase {
                                     Expr.createEQ("age", 100)).all();
                     assertTrue(usersFromOrColumnsQuery.size() > 0);
                 }
+                List<Integer> doubleAgesByJoin = User.find.where(session).alias("u1").innerJoin("jpa_user", "u2")
+                        .on("u1.id", "u2.id").endJoin().select("(u1.test_age+u2.test_age)", "sum_age").allSelected(Integer.class);
+                assertEquals(doubleAgesByJoin.size(), users.size());
             } catch (Exception e) {
                 e.printStackTrace();
                 session.rollback();

@@ -8,6 +8,7 @@ import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.SqlStatementInfo;
 import com.zoowii.jpa_utils.query.DirectSql;
 import com.zoowii.jpa_utils.query.Expr;
+import com.zoowii.jpa_utils.query.JoinInfo;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.util.*;
 import org.apache.commons.lang3.tuple.Pair;
@@ -47,6 +48,41 @@ public abstract class SqlMapper {
     public abstract String getOfDateTime();
 
     public abstract String getOfTimestamp();
+
+    public String getOfJoin(JoinInfo joinInfo) {
+        StringBuilder builder = new StringBuilder();
+        switch (joinInfo.getType()) {
+            case JoinInfo.INNER: {
+                builder.append("INNER JOIN ");
+            }
+            break;
+            case JoinInfo.LEFT: {
+                builder.append("LEFT JOIN ");
+            }
+            break;
+            case JoinInfo.RIGHT: {
+                builder.append("RIGHT JOIN ");
+            }
+            break;
+            case JoinInfo.OUT: {
+                builder.append("OUT JOIN ");
+            }
+            break;
+            default: {
+                builder.append("JOIN ");
+            }
+        }
+        builder.append(joinInfo.getJoinTableName());
+        if (!StringUtil.isEmpty(joinInfo.getJoinTableAlias())) {
+            builder.append(" AS ");
+            builder.append(joinInfo.getJoinTableAlias());
+        }
+        return builder.toString();
+    }
+
+    public String getOfJoinOn(Pair<String, String> joinCondition) {
+        return String.format("ON %s=%s", joinCondition.getLeft(), joinCondition.getRight());
+    }
 
     public String get(Class<?> propertyCls, javax.persistence.Column columnAnno, boolean isLob) {
         if (columnAnno != null && !StringUtil.isEmpty(columnAnno.columnDefinition())) {
