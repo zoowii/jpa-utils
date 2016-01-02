@@ -17,7 +17,7 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate) or direct hibernate
 * 可以自动从JPA配置创建管理session,也可以手动指定EntityManagerFactory/EntityManager/SessionFactory(hibernate)/Session(hibernate)来构造jpa-utils中的Session来使用,还可以直接从jdbc Connection构造Session
 * 提供类似ActiveRecord的使用方便友好的API，特别是查询API
 * 查询的核心Finder类可以单独使用，直接使用到现有的使用JPA或Hibernate的代码中，只需要根据现有EntityManager/Session(hibernate)构造一个jpa-utils的session，然后使用Finder类来查询就好了
-* 支持类似MyBatis的执行编程式XML中的SQL(TODO)
+* 支持类似MyBatis的执行编程式XML中的SQL(目前使用的是Clojure脚本,从而可以更灵活配置SQL)
 * 通过entity model类注解支持剥离部分SQL，比如@Query, @Sql, @SubSql, @Select, @Update, @Insert, @Delete等（DOING）
 * 通过query::select支持手动控制选择数据, 通过query::update支持对满足条件的记录执行update指定字段的操作, 通过query::join支持关联表查询
 * union操作(TODO)

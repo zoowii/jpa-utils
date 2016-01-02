@@ -1,11 +1,18 @@
 package com.zoowii.jpa_utils.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Random;
 
 public class StringUtil {
     public static boolean isEmpty(String str) {
         return str == null || str.trim().length() < 1;
+    }
+
+    public static boolean equalsIgnoreCase(String s1, String s2) {
+        return (s1 == null && s2 == null) || (s1 != null && s1.equalsIgnoreCase(s2));
     }
 
     public static boolean notEmpty(String str) {
@@ -88,5 +95,34 @@ public class StringUtil {
             }
         }
         return result.toString();
+    }
+
+    public static ByteArrayOutputStream readFullyInputStreamToBytesStream(InputStream inputStream) throws IOException {
+        if (inputStream == null) {
+            return null;
+        }
+        final int bufferSize = 4096;
+        byte[] buffer = new byte[bufferSize];
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        do {
+            int readSize = inputStream.read(buffer, 0, bufferSize);
+            if (readSize < 1) {
+                break;
+            }
+            byteArrayOutputStream.write(buffer, 0, readSize);
+        } while (true);
+        return byteArrayOutputStream;
+    }
+
+    public static String readFullyInputStream(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = null;
+        try {
+            byteArrayOutputStream = readFullyInputStreamToBytesStream(inputStream);
+            return new String(byteArrayOutputStream.toByteArray(), "UTF-8");
+        } finally {
+            if (byteArrayOutputStream != null) {
+                byteArrayOutputStream.close();
+            }
+        }
     }
 }

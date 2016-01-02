@@ -5,7 +5,6 @@ import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.util.Logger;
 import com.zoowii.jpa_utils.util.ModelUtils;
 import org.apache.commons.dbutils.BeanProcessor;
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
 import java.beans.BeanInfo;
@@ -15,7 +14,6 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.sql.Date;
 import java.util.*;
 
 /**
@@ -135,7 +133,12 @@ public class JdbcOrmBeanProcessor extends BeanProcessor {
                     ResultSetMetaData metaData = rs.getMetaData();
                     int columnsCount = metaData.getColumnCount();
                     for (int i = 0; i < columnsCount; ++i) {
-                        record.put(metaData.getColumnName(i + 1), rs.getObject(i + 1));
+//                        String columnName = metaData.getColumnName(i + 1);
+                        String columnName = metaData.getColumnLabel(i + 1);
+                        if (null == columnName || 0 == columnName.length()) {
+                            columnName = metaData.getColumnName(i + 1);
+                        }
+                        record.put(columnName, rs.getObject(i + 1));
                     }
                     results.add(record);
                 } while (rs.next());
