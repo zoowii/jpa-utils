@@ -58,7 +58,11 @@ public class SqlFileLoader {
             throw new IOException(e);
         }
         Var sqlsVar = (Var) Clojure.var(ns, "sqls");
-        IMapIterable sqlsVarVal = (PersistentArrayMap) sqlsVar.get();
+        Object sqlsVarObj = sqlsVar.get();
+        if(!(sqlsVarObj instanceof IMapIterable)) {
+            throw new IOException(String.format("resource path %s's var sqls is not a map", resourcePath));
+        }
+        IMapIterable sqlsVarVal = (IMapIterable) sqlsVarObj;
         Iterator<String> keys = sqlsVarVal.keyIterator();
         Iterator<String> vals = sqlsVarVal.valIterator();
         while (keys.hasNext()) {
