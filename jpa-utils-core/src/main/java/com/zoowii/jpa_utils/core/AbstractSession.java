@@ -91,6 +91,67 @@ public abstract class AbstractSession implements Session {
         }
     }
 
+    /**
+     * start first-level cache(cache lifecycle in session)
+     */
+    @Override
+    public void startCache() {
+
+    }
+
+    @Override
+    public void endCache() {
+
+    }
+
+    /**
+     * start second-level cache(cache lifecycle in session factory)
+     */
+    @Override
+    public void startSecondLevelCache() {
+
+    }
+
+    @Override
+    public void endSecondLevelCache() {
+
+    }
+
+    @Override
+    public boolean isStartedCache() {
+        return false;
+    }
+
+    @Override
+    public boolean isStartedSecondLevelCache() {
+        return false;
+    }
+
+    @Override
+    public void cacheBean(Object key, Class<?> beanCls, Object bean) {
+
+    }
+
+    @Override
+    public void cacheBeanInSecondLevel(Object key, Class<?> beanCls, Object bean) {}
+
+    @Override
+    public void removeBeanCache(Object key, Class<?> beanCls) {
+
+    }
+
+
+    /**
+     * find in firstLevelCache first, if not found, find in secondLevelCache then
+     * @param key
+     * @return
+     */
+    @Override
+    public <T> T getCachedBean(Object key, Class<? extends T> cls) {
+        return null;
+    }
+
+
     @Override
     public int delete(Class<?> model, Expr expr) {
         QueryInfo exprQuery = expr.toQueryString(getSqlMapper());

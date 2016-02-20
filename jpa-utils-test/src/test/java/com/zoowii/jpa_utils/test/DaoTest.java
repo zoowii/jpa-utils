@@ -15,6 +15,7 @@ import com.zoowii.jpa_utils.test.models.User;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.ModelUtils;
 import com.zoowii.jpa_utils.util.StringUtil;
+import com.zoowii.jpa_utils.util.cache.ehcache.EhcacheCacheManager;
 import junit.framework.TestCase;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -54,12 +55,15 @@ public class DaoTest extends TestCase {
 
     private JdbcSessionFactory getJdbcTestSessionFactory() {
         final Connection conn = getJdbcTestConnection();
-        return new JdbcSessionFactory(new JdbcSessionFactory.JdbcConnectionSource() {
+        JdbcSessionFactory jdbcSessionFactory = new JdbcSessionFactory(new JdbcSessionFactory.JdbcConnectionSource() {
             @Override
             public Connection get() {
                 return conn;
             }
         });
+        jdbcSessionFactory.setCacheManagerClassName("com.zoowii.jpa_utils.util.cache.ehcache.EhcacheCacheManager");
+        jdbcSessionFactory.setCacheManager(new EhcacheCacheManager("META-INF/ehcache/ehcache.xml"));
+        return jdbcSessionFactory;
     }
 
     private JdbcSessionFactory getPgsqlJdbcTestSessionFactory() {
@@ -196,6 +200,17 @@ public class DaoTest extends TestCase {
                 String fileSqlOfMaxAgeUser = SqlFileLoader.getSqlByName("select-max-age-user");
                 User maxAgeUserFromFileSql = (User) session.findFirstByRawQuery(User.class, fileSqlOfMaxAgeUser, new ParameterBindings());
                 Assert.assertTrue(maxAgeUserFromFileSql.getAge().equals(maxAgeUsers.get(0).getAge()));
+
+                // test cache
+                session.startCache();
+                try {
+                    User u1ForCache = (User) session.find(User.class, users.get(0).getId());
+                    session.cacheBeanInSecondLevel(u1ForCache.getId(), User.class, u1ForCache);
+                    User u2ForCache = (User) session.find(User.class, users.get(0).getId());
+                    Assert.assertEquals(u1ForCache, u2ForCache);
+                } finally {
+                    session.endCache();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 session.rollback();

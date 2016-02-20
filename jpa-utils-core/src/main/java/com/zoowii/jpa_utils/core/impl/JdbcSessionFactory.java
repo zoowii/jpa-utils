@@ -1,21 +1,44 @@
 package com.zoowii.jpa_utils.core.impl;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.zoowii.jpa_utils.core.AbstractSession;
 import com.zoowii.jpa_utils.core.AbstractSessionFactory;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.MySQLMapper;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
+import com.zoowii.jpa_utils.util.StringUtil;
+import com.zoowii.jpa_utils.util.cache.CacheManagerBuilder;
+import com.zoowii.jpa_utils.util.cache.ICache;
+import com.zoowii.jpa_utils.util.cache.ICacheManager;
+import com.zoowii.jpa_utils.util.cache.MemoryCacheManager;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 直接使用jdbc Connection作为Session基础的session factory
  * Created by zoowii on 15/1/26.
  */
 public class JdbcSessionFactory extends AbstractSessionFactory {
+
+    private static final String CACHE_NAME = "jpa_utils_cache";
+
+    private transient LoadingCache<Class<?>, ICache<Object, Object>> beanCacheBuilder = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .build(new CacheLoader<Class<?>, ICache<Object, Object>>() {
+                public ICache<Object, Object> load(Class<?> key) {
+                    return getCacheManager().getCache(CACHE_NAME);
+                }
+            });
 
     public interface JdbcConnectionSource {
         Connection get();
@@ -24,6 +47,41 @@ public class JdbcSessionFactory extends AbstractSessionFactory {
     private JdbcConnectionSource jdbcConnectionSource;
     private DataSource dataSource;
     private SqlMapper sqlMapper;
+
+    private String cacheManagerClassName;
+
+    public String getCacheManagerClassName() {
+        return cacheManagerClassName;
+    }
+
+    public void setCacheManagerClassName(String cacheManagerClassName) {
+        this.cacheManagerClassName = cacheManagerClassName;
+    }
+
+    private ICacheManager cacheManager;
+
+    public synchronized void setCacheManager(ICacheManager cacheManager) {
+        this.cacheManager = cacheManager;
+    }
+
+    public synchronized ICacheManager getCacheManager() {
+        if(cacheManager!=null) {
+            return cacheManager;
+        }
+        if(StringUtil.isEmpty(cacheManagerClassName)) {
+            cacheManager = new MemoryCacheManager();
+        } else {
+            try {
+                cacheManager = CacheManagerBuilder.createCacheManagerBuilder(cacheManagerClassName);
+                if(cacheManager == null) {
+                    cacheManager = new MemoryCacheManager();
+                }
+            } catch (Exception e) {
+                cacheManager = new MemoryCacheManager();
+            }
+        }
+        return cacheManager;
+    }
 
     public JdbcSessionFactory(JdbcConnectionSource jdbcConnectionSource, SqlMapper sqlMapper) {
         this.jdbcConnectionSource = jdbcConnectionSource;
@@ -77,5 +135,57 @@ public class JdbcSessionFactory extends AbstractSessionFactory {
 
     public java.sql.Connection createJdbcConnection() {
         return jdbcConnectionSource.get();
+    }
+
+    @Override
+    public void startCache() {
+        endCache();
+    }
+
+    @Override
+    public void endCache() {
+        beanCacheBuilder.invalidateAll();
+    }
+
+    private String makeCacheKey(Class<?> beanCls, Object key) {
+        if(beanCls == null || key == null) {
+            return null;
+        } else {
+            return beanCls.getName() + "@@" + key;
+        }
+    }
+
+    @Override
+    public void cacheBean(Object key, Class<?> beanCls, Object bean) {
+        if (key != null && beanCls != null && bean != null) {
+            try {
+                beanCacheBuilder.get(beanCls).put(makeCacheKey(beanCls, key), bean);
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public <T> T getCachedBean(Object key, Class<? extends T> cls) {
+        if (cls == null || key == null) {
+            return null;
+        }
+        try {
+            return (T) beanCacheBuilder.get(cls).get(makeCacheKey(cls, key));
+        } catch (ExecutionException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public void removeBeanCache(Object key, Class<?> beanCls) {
+        if(key!=null && beanCls!=null) {
+            try {
+                beanCacheBuilder.get(beanCls).remove(makeCacheKey(beanCls, key));
+            } catch (ExecutionException e) {
+
+            }
+        }
     }
 }

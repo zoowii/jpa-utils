@@ -4,6 +4,7 @@ import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.query.Finder;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
@@ -11,7 +12,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "jpa_user")
-public class User extends Model {
+public class User extends Model implements Serializable {
     public static final Finder<Long, User> find = new Finder<Long, User>(Long.class, User.class);
     @Id
 //    @GeneratedValue(strategy = GenerationType.AUTO)

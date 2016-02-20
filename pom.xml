@@ -6,10 +6,12 @@
 
     <groupId>com.zoowii</groupId>
     <artifactId>jpa-utils</artifactId>
-    <version>1.9.21u4</version>
+    <version>1.9.21u5</version>
     <modules>
         <module>jpa-utils-core</module>
         <module>jpa-utils-jpa</module>
+        <module>jpa-utils-ehcache</module>
+        <module>jpa-utils-test</module>
     </modules>
     <packaging>pom</packaging>
     <repositories>

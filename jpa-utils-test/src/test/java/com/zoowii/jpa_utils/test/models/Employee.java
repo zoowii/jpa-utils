@@ -2,13 +2,13 @@ package com.zoowii.jpa_utils.test.models;
 
 import com.zoowii.jpa_utils.orm.Model;
 import com.zoowii.jpa_utils.query.Finder;
-import com.zoowii.jpa_utils.util.StringUtil;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "employee")
-public class Employee extends Model {
+public class Employee extends Model implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id; // = StringUtil.randomString(30);

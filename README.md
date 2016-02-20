@@ -25,6 +25,7 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate) or direct hibernate
 * 支持PostgreSQL，目前只支持jsonb类型，不支持json,hstore等类型
 * 支持根据Query对象构造部分sql，然后使用时另外补全sql及其他参数
 * 根据新功能重构（TODO)
+* 添加可选的一级缓存和可选的二级缓存(如果二级缓存使用ehcache, cacheName是jpa_utils_cache)
 
 ## Usages
 

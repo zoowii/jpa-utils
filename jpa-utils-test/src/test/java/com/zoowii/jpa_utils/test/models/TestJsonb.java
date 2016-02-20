@@ -8,21 +8,21 @@ import com.zoowii.jpa_utils.extension.ExtendFinder;
 import com.zoowii.jpa_utils.orm.Model;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.io.Serializable;
 import java.util.Map;
 
 /**
  * Created by zoowii on 2015/8/13.
  */
-@Entity
+//@Entity // ignore this because hibernate not support this lib's @Jsonb, etc. annotations
 @Table(name = "test_jsonb")
 @QuerySqls(rawQueries = {
         @QuerySql(name = "insertWithDefaultTags", value = "insert into test_jsonb (id, name, tags) values (?, ?, cast('{}' as jsonb))"),
         @QuerySql(name = "selectCountries", value = "select distinct tags->>'country' as country from test_jsonb")
 })
-public class TestJsonb extends Model {
+public class TestJsonb extends Model implements Serializable {
     public static final ExtendFinder<String, TestJsonb> find = new ExtendFinder<String, TestJsonb>(String.class, TestJsonb.class);
 
     private String id;

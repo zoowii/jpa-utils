@@ -21,8 +21,8 @@ public class Finder<K, M> {
     }
 
     public M byId(Session session, K key) {
-        if (!Model.getSession().isTransactionActive()) {
-            Model.getSession().begin();
+        if (!session.isTransactionActive()) {
+            session.begin();
         }
         return (M) session.find(modelCls, key);
     }
@@ -32,8 +32,8 @@ public class Finder<K, M> {
     }
 
     public List<M> findAll(Session session) {
-        if (!Model.getSession().isTransactionActive()) {
-            Model.getSession().begin();
+        if (!session.isTransactionActive()) {
+            session.begin();
         }
         return where(session).all();
 //        return session.findListByQuery(modelCls, "from " + modelCls.getSimpleName());

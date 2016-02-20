@@ -56,6 +56,37 @@ public interface Session {
 
     void endBatch();
 
+    /**
+     * start first-level cache(cache lifecycle in session)
+     */
+    void startCache();
+
+    void endCache();
+
+    /**
+     * start second-level cache(cache lifecycle in session factory)
+     */
+    void startSecondLevelCache();
+
+    void endSecondLevelCache();
+
+    boolean isStartedCache();
+
+    boolean isStartedSecondLevelCache();
+
+    void cacheBean(Object key, Class<?> beanCls, Object bean);
+
+    void cacheBeanInSecondLevel(Object key, Class<?> beanCls, Object bean);
+
+    void removeBeanCache(Object key, Class<?> beanCls);
+
+    /**
+     * find in firstLevelCache first, if not found, find in secondLevelCache then
+     * @param key
+     * @return
+     */
+    <T> T getCachedBean(Object key, Class<? extends T> cls);
+
     int[] executeBatch();
 
     void updateBatch(List<Object> entities);

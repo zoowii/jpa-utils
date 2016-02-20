@@ -8,7 +8,17 @@ public interface SessionFactory {
 
     Session currentSession();
 
-    abstract Session createSession();
+    Session createSession();
 
-    abstract void close();
+    void close();
+
+    void startCache();
+
+    void endCache();
+
+    void cacheBean(Object key, Class<?> beanCls, Object bean);
+
+    <T> T getCachedBean(Object key, Class<? extends T> cls);
+
+    void removeBeanCache(Object key, Class<?> beanCls);
 }

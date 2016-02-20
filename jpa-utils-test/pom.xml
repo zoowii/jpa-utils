@@ -9,23 +9,23 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jpa-utils-jpa</artifactId>
+    <artifactId>jpa-utils-test</artifactId>
+
     <dependencies>
         <dependency>
             <groupId>com.zoowii</groupId>
             <artifactId>jpa-utils-core</artifactId>
             <version>${parent.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>4.3.5.Final</version>
+            <groupId>com.zoowii</groupId>
+            <artifactId>jpa-utils-ehcache</artifactId>
+            <version>${parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>4.3.5.Final</version>
+            <groupId>com.zoowii</groupId>
+            <artifactId>jpa-utils-jpa</artifactId>
+            <version>${parent.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

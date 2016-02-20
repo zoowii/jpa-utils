@@ -40,4 +40,29 @@ public abstract class AbstractSessionFactory implements SessionFactory {
     public Session currentSession() {
         return getThreadScopeSession();
     }
+
+    @Override
+    public void startCache() {
+
+    }
+
+    @Override
+    public void endCache() {
+
+    }
+
+    @Override
+    public void cacheBean(Object key, Class<?> beanCls, Object bean) {
+
+    }
+
+    @Override
+    public  <T> T getCachedBean(Object key, Class<? extends T> cls) {
+        return null;
+    }
+
+    @Override
+    public void removeBeanCache(Object key, Class<?> beanCls) {
+
+    }
 }

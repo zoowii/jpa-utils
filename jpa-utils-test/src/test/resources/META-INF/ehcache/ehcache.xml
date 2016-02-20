@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache name="es">
+    <diskStore path="java.io.tmpdir"/>
+
+    <defaultCache
+            maxElementsOnDisk="20000"
+            maxElementsInMemory="2000"
+            eternal="false"
+            timeToIdleSeconds="120"
+            timeToLiveSeconds="120"
+            overflowToDisk="false"/>
+
+    <cache name="jpa_utils_cache"
+           maxElementsOnDisk="200000"
+           maxElementsInMemory="2000"
+           eternal="true"
+           overflowToDisk="true"
+           diskPersistent="true"/>
+</ehcache>

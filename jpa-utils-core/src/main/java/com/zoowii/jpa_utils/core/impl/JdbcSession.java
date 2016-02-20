@@ -1,6 +1,9 @@
 package com.zoowii.jpa_utils.core.impl;
 
 import com.google.common.base.Function;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.zoowii.jpa_utils.core.AbstractSession;
 import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.core.Transaction;
@@ -30,6 +33,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -44,6 +51,18 @@ public class JdbcSession extends AbstractSession {
     private transient boolean isInBatch = false;
     private transient NamedParameterStatement batchPreparedStatement;
     private transient boolean closed = false;
+
+    private transient LoadingCache<Class<?>, ConcurrentMap<Object, Object>> firstLevelCacheBuilder = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .build(
+                    new CacheLoader<Class<?>, ConcurrentMap<Object, Object>>() {
+                        public ConcurrentMap<Object, Object> load(Class<?> key) {
+                            return new ConcurrentHashMap<Object, Object>();
+                        }
+                    });
+
+    private transient boolean startedFirstLevelCache = false;
 
     public AtomicBoolean getActiveFlag() {
         return activeFlag;
@@ -302,6 +321,102 @@ public class JdbcSession extends AbstractSession {
         }
     }
 
+    /**
+     * start first-level cache(cache lifecycle in session)
+     */
+    @Override
+    public void startCache() {
+        endCache();
+        startedFirstLevelCache = true;
+    }
+
+    @Override
+    public void endCache() {
+        firstLevelCacheBuilder.invalidateAll();
+        startedFirstLevelCache = false;
+    }
+
+    /**
+     * start second-level cache(cache lifecycle in session factory)
+     */
+    @Override
+    public void startSecondLevelCache() {
+
+    }
+
+    @Override
+    public void endSecondLevelCache() {
+
+    }
+
+    @Override
+    public boolean isStartedCache() {
+        return startedFirstLevelCache;
+    }
+
+    @Override
+    public boolean isStartedSecondLevelCache() {
+        return true;
+    }
+
+    @Override
+    public void cacheBean(Object key, Class<?> beanCls, Object bean) {
+        if(startedFirstLevelCache && key != null && beanCls != null && bean != null) {
+            try {
+                firstLevelCacheBuilder.get(beanCls).put(key, bean);
+            } catch (ExecutionException e) {
+
+            }
+        }
+    }
+
+    @Override
+    public void cacheBeanInSecondLevel(Object key, Class<?> beanCls, Object bean) {
+        if(jdbcSessionFactory!=null) {
+            jdbcSessionFactory.cacheBean(key, beanCls, bean);
+        }
+    }
+
+    @Override
+    public void removeBeanCache(Object key, Class<?> beanCls) {
+        if(key!=null && beanCls!=null) {
+            try {
+                firstLevelCacheBuilder.get(beanCls).remove(key);
+            } catch (ExecutionException e) {
+
+            }
+            if(jdbcSessionFactory!=null) {
+                jdbcSessionFactory.removeBeanCache(key, beanCls);
+            }
+        }
+    }
+
+
+    /**
+     * find in firstLevelCache first, if not found, find in secondLevelCache then
+     * @param key
+     * @return
+     */
+    @Override
+    public <T> T getCachedBean(Object key, Class<? extends T> cls) {
+        if(cls == null || key == null) {
+            return null;
+        }
+        try {
+            T bean = (T) firstLevelCacheBuilder.get(cls).get(key);
+            if(bean!=null) {
+                return bean;
+            }
+            if(jdbcSessionFactory!=null) {
+                return jdbcSessionFactory.getCachedBean(key, cls);
+            } else {
+                return null;
+            }
+        } catch (ExecutionException e) {
+            return null;
+        }
+    }
+
     @Override
     public void merge(Object entity) {
 
@@ -352,6 +467,10 @@ public class JdbcSession extends AbstractSession {
      */
     @Override
     public Object find(Class<?> cls, Object id) {
+        Object cached = getCachedBean(id, cls);
+        if(cached!=null) {
+            return cached;
+        }
         try {
             ModelMeta modelMeta = getEntityMetaOfClass(cls);
             ParameterBindings parameterBindings = new ParameterBindings();
@@ -372,7 +491,9 @@ public class JdbcSession extends AbstractSession {
                 try {
                     List<Object> result = handler.handle(resultSet);
                     if (result.size() > 0) {
-                        return result.get(0);
+                        Object bean = result.get(0);
+                        cacheBean(id, cls, bean);
+                        return bean;
                     } else {
                         return null;
                     }
