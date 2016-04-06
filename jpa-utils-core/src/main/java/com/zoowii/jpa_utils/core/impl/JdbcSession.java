@@ -643,10 +643,10 @@ public class JdbcSession extends AbstractSession {
             Object[] params = parameterBindings != null ? parameterBindings.getIndexParametersArray() : new Object[0];
             Logger.logSql("query first sql: " + queryString);
             List<Object> result = runner.query(getJdbcConnection(), queryString, handler, params);
-            if (result.size() == 1) {
+            if (result.size() > 0) {
                 return result.get(0);
             } else {
-                throw new JdbcRuntimeException("There are not single results when executing " + queryString);
+                return null; // throw new JdbcRuntimeException("There are not single results when executing " + queryString);
             }
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
