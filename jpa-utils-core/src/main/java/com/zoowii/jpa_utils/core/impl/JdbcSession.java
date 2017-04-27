@@ -109,6 +109,15 @@ public class JdbcSession extends AbstractSession {
     }
 
     @Override
+    public void begin() {
+        txStack.add(1);
+        if (getTransactionNestedLevel() > 1) {
+            return;
+        }
+        getActiveFlag().set(true);
+    }
+
+    @Override
     public Transaction getTransaction() {
         return new JdbcTransaction(this);
     }

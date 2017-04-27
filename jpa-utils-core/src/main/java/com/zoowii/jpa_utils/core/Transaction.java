@@ -4,11 +4,11 @@ package com.zoowii.jpa_utils.core;
  * Created by zoowii on 14-12-23.
  */
 public interface Transaction {
-    public void begin();
+    void begin();
 
-    public void commit();
+    void commit();
 
-    public void rollback();
+    void rollback();
 
-    public boolean isActive();
+    boolean isActive();
 }

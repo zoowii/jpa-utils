@@ -45,7 +45,7 @@ public class JdbcTransaction implements Transaction {
         if (isAutoCommit()) {
             return;
         }
-        if (jdbcSession.getActiveFlag().get()) {
+        if (!jdbcSession.getActiveFlag().get()) {
             return;
         }
         try {
