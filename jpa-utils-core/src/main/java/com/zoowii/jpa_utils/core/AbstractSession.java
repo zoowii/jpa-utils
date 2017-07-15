@@ -248,13 +248,16 @@ public abstract class AbstractSession implements Session {
     public static Session currentSession() {
         WeakReference<Session> defaultSession = defaultThreadLocalSessions.get();
         if (defaultSession != null && defaultSession.get() != null) {
-            return defaultSession.get();
+            Session session = defaultSession.get();
+            if(!session.isClosed()) {
+                return session;
+            }
         }
         SessionFactory sessionFactory = defaultSessionFactory;
         if(sessionFactory==null) {
             sessionFactory = EntitySessionFactory.getDefaultEntitySessionFactory();
         }
-        Session session = sessionFactory.currentSession();
+        Session session = sessionFactory.createSession();
         defaultThreadLocalSessions.set(new WeakReference<Session>(session));
         return session;
     }

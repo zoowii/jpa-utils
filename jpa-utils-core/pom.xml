@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jpa-utils</artifactId>
         <groupId>com.zoowii</groupId>
-        <version>1.9.21u6</version>
+        <version>1.9.21u7</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -54,6 +54,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.7</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

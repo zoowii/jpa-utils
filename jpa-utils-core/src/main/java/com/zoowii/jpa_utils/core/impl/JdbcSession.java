@@ -128,10 +128,10 @@ public class JdbcSession extends AbstractSession {
             if(closed) {
                 return false;
             }
-            if(jdbcConnection==null) {
+            if(getJdbcConnection()==null) {
                 return true;
             }
-            return !jdbcConnection.isClosed();
+            return !getJdbcConnection().isClosed();
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
         }
