@@ -240,8 +240,25 @@ public abstract class AbstractSession implements Session {
     }
 
     /**
+     * get session binded to current thread, if not exists, return null
+     * @return
+     */
+    public static Session currentSessionIfExists() {
+        WeakReference<Session> defaultSession = defaultThreadLocalSessions.get();
+        if (defaultSession != null && defaultSession.get() != null) {
+            Session session = defaultSession.get();
+            if(!session.isClosed()) {
+                return session;
+            }
+        }
+        return null;
+    }
+
+    /**
      * check whether session binded to current thread first, if not, use EntitySessionFactory.currentSession(),
      * and set result to binded session of current thread
+     *
+     * notice, the session is stored in thread local with weak reference, if not kept
      *
      * @return current session of current thread
      */

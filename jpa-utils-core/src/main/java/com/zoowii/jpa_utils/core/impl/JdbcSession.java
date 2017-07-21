@@ -26,6 +26,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.exception.CloneFailedException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
@@ -44,6 +45,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by zoowii on 15/1/26.
  */
 public class JdbcSession extends AbstractSession {
+    private org.slf4j.Logger logger = LoggerFactory.getLogger(JdbcSession.class);
+
     private java.sql.Connection jdbcConnection;
     private JdbcSessionFactory jdbcSessionFactory;
     private AtomicBoolean activeFlag = new AtomicBoolean(false);
@@ -80,6 +83,10 @@ public class JdbcSession extends AbstractSession {
         if (jdbcConnection == null) {
             jdbcConnection = jdbcSessionFactory.createJdbcConnection();
         }
+        return jdbcConnection;
+    }
+
+    public java.sql.Connection getJdbcConnectionOrNull() {
         return jdbcConnection;
     }
 
@@ -128,10 +135,10 @@ public class JdbcSession extends AbstractSession {
             if(closed) {
                 return false;
             }
-            if(getJdbcConnection()==null) {
+            if(jdbcConnection==null) {
                 return true;
             }
-            return !getJdbcConnection().isClosed();
+            return !jdbcConnection.isClosed();
         } catch (SQLException e) {
             throw new JdbcRuntimeException(e);
         }
@@ -148,6 +155,7 @@ public class JdbcSession extends AbstractSession {
             }
             if(jdbcConnection!=null) {
                 jdbcConnection.close();
+                logger.debug("jdbc connection closed");
             }
             closed = true;
         } catch (SQLException e) {

@@ -14,6 +14,8 @@ import com.zoowii.jpa_utils.util.cache.CacheManagerBuilder;
 import com.zoowii.jpa_utils.util.cache.ICache;
 import com.zoowii.jpa_utils.util.cache.ICacheManager;
 import com.zoowii.jpa_utils.util.cache.MemoryCacheManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -28,6 +30,8 @@ import java.util.concurrent.TimeUnit;
  * Created by zoowii on 15/1/26.
  */
 public class JdbcSessionFactory extends AbstractSessionFactory {
+
+    private Logger logger = LoggerFactory.getLogger(JdbcSessionFactory.class);
 
     private static final String CACHE_NAME = "jpa_utils_cache";
 
@@ -99,7 +103,9 @@ public class JdbcSessionFactory extends AbstractSessionFactory {
             @Override
             public Connection get() {
                 try {
-                    return dataSource.getConnection();
+                    java.sql.Connection conn = dataSource.getConnection();
+                    logger.debug("new jdbc connection created");
+                    return conn;
                 } catch (SQLException e) {
                     throw new JdbcRuntimeException(e);
                 }
@@ -130,7 +136,6 @@ public class JdbcSessionFactory extends AbstractSessionFactory {
 
     @Override
     public void close() {
-
     }
 
     public java.sql.Connection createJdbcConnection() {
