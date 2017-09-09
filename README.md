@@ -58,6 +58,14 @@ ActiveRecord-like implementation based on JPA(eg. Hibernate) or direct hibernate
     Session session = Session.currentSession();
     session.begin();
     try {
+        DbMigrationContext dbMigrationContext = new DbMigrationContext(session);
+        dbMigrationContext.loadAndApplyMigrations(Arrays.asList(
+                CreateUserTableMigration.class,
+                AddAgeToUserTableMigration.class
+        ));
+        Long lastDbMigrationVersion = DbVersionEntity.find.where(session).orderBy("version", false).select("version").firstSelected(Long.class);
+        LOG.info("last db migration version is " + lastDbMigrationVersion);
+    
         Query<Employee> query = Employee.find.where().gt("age", 50);
         query = query.limit(8);
         List<Employee> employees = query.all(); // or query.all(session);

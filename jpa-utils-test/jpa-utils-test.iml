@@ -20,7 +20,7 @@
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.3.2" level="project" />
     <orderEntry type="library" name="Maven: commons-dbutils:commons-dbutils:1.6" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.persistence:javax.persistence:2.1.0" level="project" />
-    <orderEntry type="library" name="Maven: org.clojure:clojure:1.7.0" level="project" />
+    <orderEntry type="library" name="Maven: org.clojure:clojure:1.8.0" level="project" />
     <orderEntry type="module" module-name="jpa-utils-ehcache" />
     <orderEntry type="library" name="Maven: net.sf.ehcache:ehcache:2.8.1" level="project" />
     <orderEntry type="module" module-name="jpa-utils-jpa" />
@@ -39,6 +39,7 @@
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.11" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.h2database:h2:1.4.182" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.postgresql:postgresql:9.4-1201-jdbc41" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:slf4j-simple:1.7.7" level="project" />
   </component>
 </module>

@@ -7,9 +7,14 @@ import com.zoowii.jpa_utils.core.impl.JdbcSessionFactory;
 import com.zoowii.jpa_utils.enums.SqlTypes;
 import com.zoowii.jpa_utils.jdbcorm.SqlFileLoader;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.PgSQLMapper;
+import com.zoowii.jpa_utils.migration.DbMigrationContext;
+import com.zoowii.jpa_utils.migration.DbVersionEntity;
+import com.zoowii.jpa_utils.migration.IDbMigration;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.query.Query;
+import com.zoowii.jpa_utils.test.migrations.AddAgeToUserTableMigration;
+import com.zoowii.jpa_utils.test.migrations.CreateUserTableMigration;
 import com.zoowii.jpa_utils.test.models.TestJsonb;
 import com.zoowii.jpa_utils.test.models.User;
 import com.zoowii.jpa_utils.util.ListUtil;
@@ -211,6 +216,16 @@ public class DaoTest extends TestCase {
                 } finally {
                     session.endCache();
                 }
+
+                DbMigrationContext dbMigrationContext = new DbMigrationContext(session);
+                dbMigrationContext.loadAndApplyMigrations(Arrays.asList(
+                        CreateUserTableMigration.class,
+                        AddAgeToUserTableMigration.class
+                ));
+                Long lastDbMigrationVersion = DbVersionEntity.find.where(session).orderBy("version", false).select("version").firstSelected(Long.class);
+                LOG.info("last db migration version is " + lastDbMigrationVersion);
+
+                session.commit();
             } catch (Exception e) {
                 e.printStackTrace();
                 session.rollback();
