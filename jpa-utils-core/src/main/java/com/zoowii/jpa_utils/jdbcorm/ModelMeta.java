@@ -6,6 +6,7 @@ import com.zoowii.jpa_utils.util.FieldAccessor;
 import com.zoowii.jpa_utils.util.Logger;
 import com.zoowii.jpa_utils.util.StringUtil;
 
+import javax.persistence.Index;
 import javax.persistence.Transient;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -21,6 +22,7 @@ public class ModelMeta {
     private Set<ModelColumnMeta> columnMetas;
     private ModelColumnMeta idColumnMeta;
     private SqlMapper sqlMapper;
+    private List<Index> tableIndexes = new ArrayList<Index>();
 
     /**
      * column info of orm model class, ignore all fields with @javax.sql.Transient
@@ -104,6 +106,8 @@ public class ModelMeta {
                 tableName = table.name();
             }
             tableSchema = table.schema();
+
+            tableIndexes.addAll(Arrays.asList(table.indexes()));
         }
         columnMetas = getColumnMetas();
     }
@@ -167,5 +171,13 @@ public class ModelMeta {
             return null;
         }
         return FieldAccessor.getFieldAccessor(modelCls, idColumnMeta.fieldName);
+    }
+
+    public List<Index> getTableIndexes() {
+        return tableIndexes;
+    }
+
+    public void setTableIndexes(List<Index> tableIndexes) {
+        this.tableIndexes = tableIndexes;
     }
 }

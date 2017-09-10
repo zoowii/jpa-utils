@@ -13,6 +13,7 @@ import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.util.*;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -123,6 +124,9 @@ public abstract class SqlMapper {
         }
         if (propertyCls == java.sql.Date.class) {
             return getOfDate();
+        }
+        if(propertyCls == BigDecimal.class) {
+            return getOfLong();
         }
         if (propertyCls == java.sql.Timestamp.class
                 || propertyCls == java.sql.Time.class) {

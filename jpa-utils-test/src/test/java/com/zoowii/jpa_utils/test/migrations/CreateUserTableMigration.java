@@ -8,7 +8,7 @@ import java.util.Arrays;
 public class CreateUserTableMigration extends AbstractDbMigration {
     @Override
     public long getVersion() {
-        return 1504974365;
+        return 1504974365L;
     }
 
     @Override

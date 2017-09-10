@@ -6,7 +6,7 @@ import com.zoowii.jpa_utils.migration.AbstractDbMigration;
 public class AddAgeToUserTableMigration extends AbstractDbMigration {
     @Override
     public long getVersion() {
-        return 1504974386;
+        return 1504974386L;
     }
 
     @Override

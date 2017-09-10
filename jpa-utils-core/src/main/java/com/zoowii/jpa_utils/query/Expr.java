@@ -185,6 +185,12 @@ public class Expr {
     }
 
     public static Expr createIN(String property, Object value) {
+        if(value != null && value instanceof List) {
+            List<Object> listValue = (List<Object>) value;
+            if(listValue.isEmpty()) {
+                throw new JdbcRuntimeException("in expression can't accept empty list");
+            }
+        }
         return new Expr(IN, ListUtil.seq(property, value));
     }
 

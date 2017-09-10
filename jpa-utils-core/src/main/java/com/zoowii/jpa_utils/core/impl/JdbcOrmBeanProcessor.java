@@ -13,6 +13,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 
@@ -155,6 +156,9 @@ public class JdbcOrmBeanProcessor extends BeanProcessor {
     }
 
     private <T> T createBean(ResultSet rs, Class<T> type, PropertyDescriptor[] props, int[] columnToProperty) throws SQLException {
+        if(type== BigDecimal.class) {
+            System.out.print("");
+        }
         Object bean = this.newInstance(type);
 
         for (int i = 1; i < columnToProperty.length; ++i) {
@@ -197,9 +201,9 @@ public class JdbcOrmBeanProcessor extends BeanProcessor {
                 } else if (value instanceof String && params[0].isEnum()) {
                     value = Enum.valueOf(params[0].asSubclass(Enum.class), (String) value);
                 }
-
-                if (this.isCompatibleType(value, params[0])) {
-                    setter.invoke(target, new Object[]{value});
+                Object compatibleValue = this.isCompatibleType(value, params[0]);
+                if (compatibleValue!=null) {
+                    setter.invoke(target, new Object[]{compatibleValue});
                 } else {
                     throw new SQLException("Cannot set " + prop.getName() + ": incompatible types, cannot convert " + value.getClass().getName() + " to " + params[0].getName());
                 }
@@ -213,8 +217,51 @@ public class JdbcOrmBeanProcessor extends BeanProcessor {
         }
     }
 
-    private boolean isCompatibleType(Object value, Class<?> type) {
-        return value != null && !type.isInstance(value) ? (type.equals(Integer.TYPE) && value instanceof Integer ? true : (type.equals(Long.TYPE) && value instanceof Long ? true : (type.equals(Double.TYPE) && value instanceof Double ? true : (type.equals(Float.TYPE) && value instanceof Float ? true : (type.equals(Short.TYPE) && value instanceof Short ? true : (type.equals(Byte.TYPE) && value instanceof Byte ? true : (type.equals(Character.TYPE) && value instanceof Character ? true : type.equals(Boolean.TYPE) && value instanceof Boolean))))))) : true;
+    /**
+     * 如果是兼容类型,返回值本身或者转换类型后的值,否则返回null
+     * @param value
+     * @param type
+     * @return
+     */
+    private Object isCompatibleType(Object value, Class<?> type) {
+        if(value == null) {
+            return null;
+        }
+        if(type.isInstance(value)) {
+            return value;
+        }
+        if(type.equals(Integer.TYPE) && value instanceof Integer) {
+            return value;
+        }
+        if(type.equals(Long.TYPE) && value instanceof Long) {
+            return value;
+        }
+        if(type.equals(Double.TYPE) && value instanceof Double) {
+            return value;
+        }
+        if(type.equals(Float.TYPE) && value instanceof Float) {
+            return value;
+        }
+        if(type.equals(Short.TYPE) && value instanceof Short) {
+            return value;
+        }
+        if(type.equals(Byte.TYPE) && value instanceof Byte) {
+            return value;
+        }
+        if(type.equals(Character.TYPE) && value instanceof Character) {
+            return value;
+        }
+        if(type.equals(Boolean.TYPE) && value instanceof Boolean) {
+            return value;
+        }
+        if(type == BigDecimal.class) {
+            if(value instanceof Integer || value instanceof Long || value instanceof Short) {
+                return BigDecimal.valueOf(Long.valueOf(value.toString()));
+            } else {
+                return null;
+            }
+        }
+        return null;
     }
 
     static {

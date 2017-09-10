@@ -7,15 +7,16 @@ import com.zoowii.jpa_utils.core.impl.JdbcSessionFactory;
 import com.zoowii.jpa_utils.enums.SqlTypes;
 import com.zoowii.jpa_utils.jdbcorm.SqlFileLoader;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.PgSQLMapper;
+import com.zoowii.jpa_utils.migration.AbstractDbMigration;
 import com.zoowii.jpa_utils.migration.DbMigrationContext;
 import com.zoowii.jpa_utils.migration.DbVersionEntity;
 import com.zoowii.jpa_utils.migration.IDbMigration;
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.ParameterBindings;
 import com.zoowii.jpa_utils.query.Query;
-import com.zoowii.jpa_utils.test.migrations.AddAgeToUserTableMigration;
-import com.zoowii.jpa_utils.test.migrations.CreateUserTableMigration;
+import com.zoowii.jpa_utils.test.migrations.*;
 import com.zoowii.jpa_utils.test.models.TestJsonb;
+import com.zoowii.jpa_utils.test.models.TestUser1Entity;
 import com.zoowii.jpa_utils.test.models.User;
 import com.zoowii.jpa_utils.util.ListUtil;
 import com.zoowii.jpa_utils.util.ModelUtils;
@@ -26,6 +27,7 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.*;
@@ -218,12 +220,29 @@ public class DaoTest extends TestCase {
                 }
 
                 DbMigrationContext dbMigrationContext = new DbMigrationContext(session);
-                dbMigrationContext.loadAndApplyMigrations(Arrays.asList(
-                        CreateUserTableMigration.class,
-                        AddAgeToUserTableMigration.class
+                dbMigrationContext.applyMigrations(Arrays.asList(
+                        (IDbMigration) new AddNameKeyToUserTableMigration(),
+                        new CreateUserTableMigration(),
+                        new AddAgeToUserTableMigration(),
+                        new AddAmountToUserTableMigration()
+
+//                        (IDbMigration) new CreateUserTableFromEntityMigration()
                 ));
                 Long lastDbMigrationVersion = DbVersionEntity.find.where(session).orderBy("version", false).select("version").firstSelected(Long.class);
                 LOG.info("last db migration version is " + lastDbMigrationVersion);
+
+                // test add record with id auto set by db
+                TestUser1Entity testUser1OfAuto = new TestUser1Entity();
+                testUser1OfAuto.setName("test_" + new Date().getTime());
+                testUser1OfAuto.setAge((int)(new Date().getTime()%100));
+                testUser1OfAuto.setAmount(new BigDecimal(123));
+                testUser1OfAuto.save(session);
+
+                assertTrue(testUser1OfAuto.getId()!=null);
+                LOG.info("testUser1OfAuto id is " + testUser1OfAuto.getId());
+
+                BigDecimal testUser1SumAmount = TestUser1Entity.find.where(session).orderBy("id", false).select("amount").firstSelected(BigDecimal.class);
+                assertTrue(testUser1SumAmount!=null && testUser1SumAmount.equals(testUser1OfAuto.getAmount()));
 
                 session.commit();
             } catch (Exception e) {

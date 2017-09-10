@@ -5,6 +5,7 @@ import com.zoowii.jpa_utils.builders.QuerySqlBuilder;
 import com.zoowii.jpa_utils.core.IWrappedQuery;
 import com.zoowii.jpa_utils.core.Session;
 import com.zoowii.jpa_utils.enums.SqlTypes;
+import com.zoowii.jpa_utils.exceptions.JdbcRuntimeException;
 import com.zoowii.jpa_utils.jdbcorm.ModelMeta;
 import com.zoowii.jpa_utils.jdbcorm.sqlmapper.SqlMapper;
 import com.zoowii.jpa_utils.orm.Model;

@@ -7,6 +7,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.RowProcessor;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -31,6 +32,9 @@ public class JdbcOrmBeanHandler<T> implements ResultSetHandler<T> {
     public static boolean isRawType(Class<?> type) {
         if(type==null) {
             return false;
+        }
+        if(type== BigDecimal.class) {
+            return true; // treat BigDecimal as raw type
         }
         return type == String.class || type == Integer.class || type == Long.class || type == Float.class || type == Double.class
                 || type == Boolean.class || "int".equals(type.getName()) || "long".equals(type.getName())
@@ -59,6 +63,9 @@ public class JdbcOrmBeanHandler<T> implements ResultSetHandler<T> {
             }
             if(type==Double.class || "double".equals(type.getName())) {
                 return rs.getDouble(1);
+            }
+            if(type==BigDecimal.class) {
+                return rs.getBigDecimal(1);
             }
             // TODO: support array/json
             return null;
