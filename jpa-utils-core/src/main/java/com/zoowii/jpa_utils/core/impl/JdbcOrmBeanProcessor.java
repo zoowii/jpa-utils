@@ -202,7 +202,7 @@ public class JdbcOrmBeanProcessor extends BeanProcessor {
                     value = Enum.valueOf(params[0].asSubclass(Enum.class), (String) value);
                 }
                 Object compatibleValue = this.isCompatibleType(value, params[0]);
-                if (compatibleValue!=null) {
+                if (compatibleValue!=null || value == null) {
                     setter.invoke(target, new Object[]{compatibleValue});
                 } else {
                     throw new SQLException("Cannot set " + prop.getName() + ": incompatible types, cannot convert " + value.getClass().getName() + " to " + params[0].getName());
