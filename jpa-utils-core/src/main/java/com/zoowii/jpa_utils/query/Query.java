@@ -209,6 +209,13 @@ public class Query<M> {
         return new JoinInfo.Builder<M>(this, joinInfo);
     }
 
+    public Query<M> addJoinInfo(JoinInfo joinInfo) {
+        if(joinInfo!=null) {
+            this.joinInfos.add(joinInfo);
+        }
+        return this;
+    }
+
     public Query<M> setParameter(String key, Object value) {
         this.mapParameters.put(key, value);
         return this;

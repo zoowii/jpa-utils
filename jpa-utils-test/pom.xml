@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jpa-utils</artifactId>
         <groupId>com.zoowii</groupId>
-        <version>1.9.21u11</version>
+        <version>1.9.21u12</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

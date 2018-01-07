@@ -2,7 +2,9 @@ package com.zoowii.jpa_utils.extension;
 
 import com.zoowii.jpa_utils.query.Expr;
 import com.zoowii.jpa_utils.query.Finder;
+import com.zoowii.jpa_utils.query.JoinInfo;
 import com.zoowii.jpa_utils.query.Query;
+import com.zoowii.jpa_utils.util.StringUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -28,8 +30,16 @@ public class ExtendFinder<K, M> extends Finder<K, M> {
             return this.findAll();
         }
         Query<M> query = this.where();
+        if(StringUtil.notEmpty(paginator.getTableAlias())) {
+            query = query.alias(paginator.getTableAlias());
+        }
         for (Expr expr : paginator.getExpressions()) {
             query = query.and(expr);
+        }
+        if(paginator.getJoinInfos()!=null) {
+            for (JoinInfo joinInfo : paginator.getJoinInfos()) {
+                query.addJoinInfo(joinInfo);
+            }
         }
         for (Pair<String, Boolean> orderBy : paginator.getOrders()) {
             query = query.orderBy(orderBy.getLeft(), orderBy.getRight());

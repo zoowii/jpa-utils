@@ -1,8 +1,12 @@
 package com.zoowii.jpa_utils.extension;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Function;
 import com.zoowii.jpa_utils.query.Expr;
+import com.zoowii.jpa_utils.query.JoinInfo;
 import com.zoowii.jpa_utils.query.Query;
+import com.zoowii.jpa_utils.util.StringUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -13,13 +17,15 @@ import java.util.List;
  * Created by zoowii on 14-12-23.
  */
 public class Paginator {
-    private long page = 1;
-    private long pageSize = 10;
-    private long total = 0;
-    private List<Pair<String, Boolean>> orders = new ArrayList<Pair<String, Boolean>>();
-    private List<Expr> expressions = new ArrayList<Expr>();
-    private Function<Query, Query> beforeQueryProcessor = null;
-    private List<Object> parameters = new ArrayList<Object>();
+    protected long page = 1;
+    protected long pageSize = 10;
+    protected long total = 0;
+    protected List<Pair<String, Boolean>> orders = new ArrayList<Pair<String, Boolean>>();
+    protected List<Expr> expressions = new ArrayList<Expr>();
+    protected Function<Query, Query> beforeQueryProcessor = null;
+    protected List<Object> parameters = new ArrayList<Object>();
+    protected String tableAlias;
+    protected List<JoinInfo> joinInfos = new ArrayList<JoinInfo>();
 
     public long skippedCount() {
         return (page - 1) * pageSize;
@@ -170,11 +176,42 @@ public class Paginator {
         this.expressions = expressions;
     }
 
+    @JSONField(serialize = false, deserialize = false)
+    @JsonIgnore
     public Function<Query, Query> getBeforeQueryProcessor() {
         return beforeQueryProcessor;
     }
 
+    @JSONField(serialize = false, deserialize = false)
+    @JsonIgnore
     public void setBeforeQueryProcessor(Function<Query, Query> beforeQueryProcessor) {
         this.beforeQueryProcessor = beforeQueryProcessor;
+    }
+
+    public String getTableAlias() {
+        return tableAlias;
+    }
+
+    public void setTableAlias(String tableAlias) {
+        this.tableAlias = tableAlias;
+    }
+
+    public <M> JoinInfo.Builder<M> join(String tableName, String tableAlias, int joinType) {
+        if (StringUtil.isEmpty(tableAlias)) {
+            tableAlias = tableName;
+        }
+        if (StringUtil.isEmpty(tableName)) {
+            return new JoinInfo.Builder<M>(null, null);
+        }
+        JoinInfo joinInfo = new JoinInfo();
+        joinInfo.setType(joinType);
+        joinInfo.setJoinTableName(tableName);
+        joinInfo.setJoinTableAlias(tableAlias);
+        this.joinInfos.add(joinInfo);
+        return new JoinInfo.Builder<M>(null, joinInfo);
+    }
+
+    public List<JoinInfo> getJoinInfos() {
+        return joinInfos;
     }
 }
