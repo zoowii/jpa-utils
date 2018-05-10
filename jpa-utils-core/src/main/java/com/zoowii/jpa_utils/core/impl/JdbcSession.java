@@ -213,7 +213,7 @@ public class JdbcSession extends AbstractSession {
                         try {
                             if (generatedKeysResultSet.next()) {
                                 Object generatedId = generatedKeysResultSet.getObject(1);
-                                idAccessor.setProperty(entity, generatedId);
+                                idAccessor.setPropertyWithAutoTypeCast(entity, generatedId);
                                 refresh(entity);
                             }
                         } finally {

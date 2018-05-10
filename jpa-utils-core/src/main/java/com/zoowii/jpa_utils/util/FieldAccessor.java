@@ -4,6 +4,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -108,6 +110,49 @@ public class FieldAccessor {
             }
         }
         throw new RuntimeException(String.format("Can't find accessor of get property value of %s", name));
+    }
+
+    // set property value. if type not match, try to auto cast. eg. Long to Integer, Double/BigDecimal/Float, java.util.Date/java.sql.Date/java.sql.Timestamp to each other
+    public void setPropertyWithAutoTypeCast(Object obj, Object value) {
+        if(value==null) {
+            setProperty(obj, value);
+            return;
+        }
+        Class<?> propType = getPropertyType();
+        if(propType.isAssignableFrom(value.getClass())) {
+            setProperty(obj, value);
+            return;
+        }
+        if(value instanceof Long && propType.equals(Integer.class)) {
+            setProperty(obj, Integer.valueOf(value.toString()));
+            return;
+        }
+        if(value instanceof Double || value instanceof Float || value instanceof BigDecimal) {
+            if(propType.isAssignableFrom(Double.class)) {
+                setProperty(obj, Double.valueOf(value.toString()));
+                return;
+            } else if(propType.isAssignableFrom(Float.class)) {
+                setProperty(obj, Float.valueOf(value.toString()));
+                return;
+            } else if(propType.isAssignableFrom(BigDecimal.class)) {
+                setProperty(obj, BigDecimal.valueOf(Double.valueOf(value.toString())));
+                return;
+            } else {
+                throw new RuntimeException("Illegal field value type to set " + name);
+            }
+        }
+        if(value instanceof java.util.Date) {
+            if(propType.isAssignableFrom(java.sql.Timestamp.class)) {
+                setProperty(obj, new java.sql.Timestamp(((java.util.Date) value).getTime()));
+                return;
+            } else if(propType.isAssignableFrom(java.sql.Date.class)) {
+                setProperty(obj, new java.sql.Date(((java.util.Date) value).getTime()));
+                return;
+            } else {
+                throw new RuntimeException("Illegal field value type to set " + name);
+            }
+        }
+        throw new RuntimeException("Illegal field value type to set " + name);
     }
 
     public void setProperty(Object obj, Object value) {
