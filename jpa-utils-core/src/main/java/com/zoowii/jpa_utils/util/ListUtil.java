@@ -171,4 +171,12 @@ public class ListUtil {
         List<T> sorted = clone(source);
         return Collections.min(sorted, comparator);
     }
+    public static <T> List<T> cloneList(List<T> source) {
+        if(source == null) {
+            return null;
+        }
+        List<T> result = new ArrayList<T>();
+        result.addAll(source);
+        return result;
+    }
 }

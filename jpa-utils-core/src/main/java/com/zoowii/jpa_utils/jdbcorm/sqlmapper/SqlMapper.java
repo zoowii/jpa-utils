@@ -307,13 +307,13 @@ public abstract class SqlMapper {
         String finalTable = tableAlias != null ? (tableAlias + "." + getSqlColumnNameWrapped(columnName)) : getSqlColumnNameWrapped(columnName);
         if(Expr.IN.equalsIgnoreCase(op)) {
             if(value instanceof List) {
-                List<Object> valueList = (List<Object>) value;
+                List<Object> valueList = ListUtil.cloneList((List<Object>) value);
                 for(int i=0;i<valueList.size();++i) {
                     if(valueList.get(i) instanceof String) {
                         valueList.set(i, String.format("'%s'", valueList.get(i)));
                     }
                 }
-                value = StringUtil.join((List<?>) value, ", ");
+                value = StringUtil.join(valueList, ", ");
             }
             return String.format(" (%s %s (%s)) ", finalTable, op, value);
         }
