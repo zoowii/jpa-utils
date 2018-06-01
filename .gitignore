@@ -9,4 +9,5 @@
 /logs
 /*.out
 .project
+.classpath
 .settings
