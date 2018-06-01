@@ -8,3 +8,5 @@
 /dependency-reduced-pom.xml
 /logs
 /*.out
+.project
+.settings

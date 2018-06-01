@@ -6,7 +6,7 @@
 
     <groupId>com.zoowii</groupId>
     <artifactId>jpa-utils</artifactId>
-    <version>1.9.21u15</version>
+    <version>1.9.21u16</version>
     <modules>
         <module>jpa-utils-core</module>
         <module>jpa-utils-jpa</module>
@@ -17,7 +17,7 @@
     <repositories>
     </repositories>
     <properties>
-        <global.version>1.9.21u14</global.version>
+        <global.version>1.9.21u16</global.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
